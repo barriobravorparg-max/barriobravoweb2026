@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { staff } from "@/lib/content";
 import { ImagePlaceholder } from "@/components/ui/ImagePlaceholder";
+import { TiltCard } from "@/components/ui/TiltCard";
 
 export function Staff() {
   return (
@@ -23,12 +24,14 @@ export function Staff() {
             className="text-center"
           >
             {/* TODO: imagen — staff-{alias}.jpg, 400x400px, ver spec §3.7 */}
-            <ImagePlaceholder
-              aspectClassName="aspect-square"
-              label={`Avatar de ${member.alias}`}
-              todo={`staff-${member.alias.toLowerCase()}.jpg, 400x400px`}
-              className="rounded-full"
-            />
+            <TiltCard>
+              <ImagePlaceholder
+                aspectClassName="aspect-square"
+                label={`Avatar de ${member.alias}`}
+                todo={`staff-${member.alias.toLowerCase()}.jpg, 400x400px`}
+                className="rounded-full"
+              />
+            </TiltCard>
             <p className="mt-3 font-display text-lg uppercase text-white">{member.alias}</p>
             <p className="text-sm text-gray-500">{member.role}</p>
           </motion.div>

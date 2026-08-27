@@ -1,6 +1,7 @@
 import { tiendaTiers } from "@/lib/content";
 import { Button } from "@/components/ui/Button";
 import { ImagePlaceholder } from "@/components/ui/ImagePlaceholder";
+import { TiltCard } from "@/components/ui/TiltCard";
 
 export function TiendaPreview() {
   return (
@@ -19,7 +20,9 @@ export function TiendaPreview() {
               </span>
             )}
             {/* TODO: imagen — tienda-{tier-name}.jpg, 900x600px, ver spec §3.7 */}
-            <ImagePlaceholder aspectClassName="aspect-[3/2]" label={`Imagen ${tier.name}`} todo={`tienda-${tier.name.toLowerCase().replace(/\s+/g, "-")}.jpg, 900x600px`} />
+            <TiltCard>
+              <ImagePlaceholder aspectClassName="aspect-[3/2]" label={`Imagen ${tier.name}`} todo={`tienda-${tier.name.toLowerCase().replace(/\s+/g, "-")}.jpg, 900x600px`} />
+            </TiltCard>
             <h3 className="mt-4 font-display text-2xl uppercase text-white">{tier.name}</h3>
             <p className="mt-1 font-display text-xl text-peach">{tier.price}</p>
             <Button variant="primary" disabled className="mt-4 w-full">

@@ -1,4 +1,5 @@
 import { ImagePlaceholder } from "@/components/ui/ImagePlaceholder";
+import { TiltCard } from "@/components/ui/TiltCard";
 
 const SLOTS = Array.from({ length: 8 }, (_, i) => i + 1);
 
@@ -13,7 +14,9 @@ export function Galeria() {
       <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {SLOTS.map((n) => (
           // TODO: imagen — galeria-{n}.jpg, 1200x900px, ver spec §3.7
-          <ImagePlaceholder key={n} aspectClassName="aspect-[4/3]" label={`Galería ${n}`} todo={`galeria-${n}.jpg, 1200x900px`} />
+          <TiltCard key={n}>
+            <ImagePlaceholder aspectClassName="aspect-[4/3]" label={`Galería ${n}`} todo={`galeria-${n}.jpg, 1200x900px`} />
+          </TiltCard>
         ))}
       </div>
     </section>

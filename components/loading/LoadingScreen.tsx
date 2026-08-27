@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import Image from "next/image";
 
 interface LoadingScreenProps {
   onFinish: () => void;
@@ -11,6 +12,15 @@ interface LoadingScreenProps {
 export function LoadingScreen({ onFinish, minDurationMs = 1500, autoAdvanceMs = 4000 }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0);
   const [ready, setReady] = useState(false);
+  const bgRef = useRef<HTMLDivElement>(null);
+
+  function handleMouseMove(e: ReactMouseEvent<HTMLDivElement>) {
+    const el = bgRef.current;
+    if (!el || (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+    const px = (e.clientX / window.innerWidth) * 2 - 1;
+    const py = (e.clientY / window.innerHeight) * 2 - 1;
+    el.style.transform = `translate(${(px * 16).toFixed(1)}px, ${(py * 16).toFixed(1)}px)`;
+  }
 
   useEffect(() => {
     const start = Date.now();
@@ -47,14 +57,25 @@ export function LoadingScreen({ onFinish, minDurationMs = 1500, autoAdvanceMs = 
   }, [ready, autoAdvanceMs, onFinish]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-base">
-      <h1 className="font-display text-5xl tracking-widest text-white sm:text-7xl">BARRIO BRAVO RP</h1>
-      <div className="h-1 w-64 overflow-hidden rounded-full bg-white/10 sm:w-96">
-        <div className="h-full bg-brand-gradient transition-all duration-100" style={{ width: `${progress}%` }} />
+    <div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 overflow-hidden bg-base"
+      onMouseMove={handleMouseMove}
+    >
+      {/* TODO: imagen — loading-bg.jpg, 2400x1350px, ver spec §3.7 (variante ampliada) */}
+      <div ref={bgRef} className="absolute inset-0 scale-110 transition-transform duration-300 ease-out motion-reduce:!transition-none">
+        <Image src="/loading-bg.png" alt="" fill priority sizes="100vw" className="object-cover" />
       </div>
-      <p className="text-sm text-gray-400">
-        {ready ? "Presioná cualquier tecla para continuar" : `Cargando... ${progress}%`}
-      </p>
+      <div className="absolute inset-0 bg-gradient-to-b from-base/85 via-base/60 to-base" />
+
+      <div className="relative z-10 flex flex-col items-center gap-6">
+        <h1 className="font-display text-5xl tracking-widest text-white sm:text-7xl">BARRIO BRAVO RP</h1>
+        <div className="h-1 w-64 overflow-hidden rounded-full bg-white/10 sm:w-96">
+          <div className="h-full bg-brand-gradient transition-all duration-100" style={{ width: `${progress}%` }} />
+        </div>
+        <p className="text-sm text-gray-400">
+          {ready ? "Presioná cualquier tecla para continuar" : `Cargando... ${progress}%`}
+        </p>
+      </div>
     </div>
   );
 }
