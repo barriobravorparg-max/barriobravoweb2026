@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LoadingScreen } from "@/components/loading/LoadingScreen";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -20,12 +20,16 @@ import { Newsletter } from "@/components/sections/Newsletter";
 export default function Home() {
   const [loaded, setLoaded] = useState(false);
 
-  if (!loaded) {
-    return <LoadingScreen onFinish={() => setLoaded(true)} />;
-  }
+  useEffect(() => {
+    document.body.style.overflow = loaded ? "" : "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [loaded]);
 
   return (
     <>
+      {!loaded && <LoadingScreen onFinish={() => setLoaded(true)} />}
       <Navbar />
       <main>
         <Hero />
