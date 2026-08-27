@@ -28,6 +28,7 @@ export function Faq() {
             <div key={item.question} className="rounded-xl border border-white/10 bg-white/[0.03]">
               <button
                 aria-expanded={isOpen}
+                aria-controls={`faq-answer-${i}`}
                 onClick={() => toggle(i)}
                 className="flex w-full items-center justify-between px-5 py-4 text-left text-white"
               >
@@ -36,7 +37,11 @@ export function Faq() {
                   {isOpen ? "−" : "+"}
                 </span>
               </button>
-              {isOpen && <p className="px-5 pb-4 text-sm text-gray-400">{item.answer}</p>}
+              {isOpen && (
+                <p id={`faq-answer-${i}`} className="px-5 pb-4 text-sm text-gray-400">
+                  {item.answer}
+                </p>
+              )}
             </div>
           );
         })}

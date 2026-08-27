@@ -28,11 +28,13 @@ export function Facciones() {
         {facciones.map((f, i) => (
           <button
             key={f.category}
+            id={`facciones-tab-${i}`}
             ref={(el) => {
               tabRefs.current[i] = el;
             }}
             role="tab"
             aria-selected={i === activeIndex}
+            aria-controls="facciones-panel"
             tabIndex={i === activeIndex ? 0 : -1}
             onClick={() => setActiveIndex(i)}
             onKeyDown={handleKeyDown}
@@ -45,7 +47,13 @@ export function Facciones() {
         ))}
       </div>
 
-      <div role="tabpanel" className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div
+        id="facciones-panel"
+        role="tabpanel"
+        aria-labelledby={`facciones-tab-${activeIndex}`}
+        tabIndex={0}
+        className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2"
+      >
         {active.jobs.map((job) => (
           <div key={job.name} className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
             <h3 className="font-display text-xl uppercase text-white">{job.name}</h3>
