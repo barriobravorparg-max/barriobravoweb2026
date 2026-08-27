@@ -22,6 +22,7 @@ export function Staff() {
             transition={{ delay: i * 0.05 }}
             className="text-center"
           >
+            {/* TODO: imagen — staff-{alias}.jpg, 400x400px, ver spec §3.7 */}
             <ImagePlaceholder
               aspectClassName="aspect-square"
               label={`Avatar de ${member.alias}`}
