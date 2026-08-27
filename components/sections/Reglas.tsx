@@ -1,6 +1,6 @@
-import { reglas } from "@/lib/content";
+import { reglas, type Regla } from "@/lib/content";
 
-const severityClasses: Record<string, string> = {
+const severityClasses: Record<Regla["severity"], string> = {
   Leve: "border-cyan text-cyan",
   Grave: "border-purple text-purple",
   "Muy grave": "border-coral text-coral",
