@@ -20,7 +20,7 @@ export function Hero() {
 
   return (
     <section id="inicio" className="mx-auto flex max-w-7xl flex-col items-center gap-10 px-4 pb-20 pt-16 sm:px-6 lg:flex-row lg:pt-24">
-      <div className="flex-1 text-center lg:text-left">
+      <div className="flex-1 text-center lg:text-left lg:order-1">
         <h1 className="font-display text-5xl uppercase leading-none text-white sm:text-6xl lg:text-7xl">{hero.headline}</h1>
         <p className="mt-4 font-display text-2xl text-transparent bg-brand-gradient bg-clip-text sm:text-3xl">{hero.tagline}</p>
         <p className="mx-auto mt-4 max-w-lg text-gray-400 lg:mx-0">{hero.description}</p>
@@ -39,7 +39,7 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 order-first lg:order-2">
         <HeroTokenLoader />
       </div>
     </section>
