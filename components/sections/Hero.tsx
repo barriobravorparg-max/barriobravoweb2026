@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { hero } from "@/lib/content";
 import { Button } from "@/components/ui/Button";
-import { ImagePlaceholder } from "@/components/ui/ImagePlaceholder";
+import { HeroTokenLoader } from "@/components/three/HeroTokenLoader";
 
 const SERVER_IP = "Próximamente";
 
@@ -40,12 +40,7 @@ export function Hero() {
       </div>
 
       <div className="flex-1">
-        <ImagePlaceholder
-          aspectClassName="aspect-square"
-          label="Token 3D BB"
-          todo="hero-token, se reemplaza por el modelo 3D interactivo en la siguiente tarea"
-          className="mx-auto w-64 sm:w-80"
-        />
+        <HeroTokenLoader />
       </div>
     </section>
   );
