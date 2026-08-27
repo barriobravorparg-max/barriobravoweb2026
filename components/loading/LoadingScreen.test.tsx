@@ -1,5 +1,4 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LoadingScreen } from "./LoadingScreen";
 
@@ -16,7 +15,9 @@ describe("LoadingScreen", () => {
     const onFinish = vi.fn();
     render(<LoadingScreen onFinish={onFinish} minDurationMs={1500} autoAdvanceMs={4000} />);
 
-    await vi.advanceTimersByTimeAsync(500);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
     screen.getByText("Cargando...", { exact: false }).ownerDocument.dispatchEvent(new KeyboardEvent("keydown"));
     expect(onFinish).not.toHaveBeenCalled();
   });
@@ -25,10 +26,14 @@ describe("LoadingScreen", () => {
     const onFinish = vi.fn();
     render(<LoadingScreen onFinish={onFinish} minDurationMs={1500} autoAdvanceMs={4000} />);
 
-    await vi.advanceTimersByTimeAsync(1500);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1500);
+    });
     expect(screen.getByText(/Presion/i)).toBeInTheDocument();
 
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+    act(() => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+    });
     expect(onFinish).toHaveBeenCalledTimes(1);
   });
 
@@ -36,7 +41,12 @@ describe("LoadingScreen", () => {
     const onFinish = vi.fn();
     render(<LoadingScreen onFinish={onFinish} minDurationMs={1500} autoAdvanceMs={4000} />);
 
-    await vi.advanceTimersByTimeAsync(1500 + 4000);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1500);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4000);
+    });
     expect(onFinish).toHaveBeenCalledTimes(1);
   });
 });
