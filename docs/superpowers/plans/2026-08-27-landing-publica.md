@@ -53,8 +53,8 @@
     "react-dom": "^19.0.0",
     "framer-motion": "^11.15.0",
     "three": "^0.171.0",
-    "@react-three/fiber": "^8.17.10",
-    "@react-three/drei": "^9.117.0"
+    "@react-three/fiber": "^9.0.0",
+    "@react-three/drei": "^10.0.0"
   },
   "devDependencies": {
     "typescript": "^5.7.2",
