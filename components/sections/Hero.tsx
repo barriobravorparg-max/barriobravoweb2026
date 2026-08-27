@@ -26,9 +26,15 @@ export function Hero() {
         <p className="mx-auto mt-4 max-w-lg text-gray-400 lg:mx-0">{hero.description}</p>
 
         <div className="mt-8 flex flex-wrap justify-center gap-4 lg:justify-start">
-          <Button variant="primary">Conectar al servidor</Button>
-          <Button variant="outline-purple">Unirse a Discord</Button>
-          <Button variant="outline-cyan">Postularte a whitelist</Button>
+          <Button variant="primary" disabled>
+            Conectar al servidor
+          </Button>
+          <Button variant="outline-purple" disabled>
+            Unirse a Discord
+          </Button>
+          <Button variant="outline-cyan" disabled>
+            Postularte a whitelist
+          </Button>
         </div>
 
         <div className="mx-auto mt-8 flex max-w-sm items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-5 py-4 lg:mx-0">

@@ -23,8 +23,12 @@ export function Navbar() {
         </ul>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Button variant="outline-purple">Discord</Button>
-          <Button variant="primary">Conectar</Button>
+          <Button variant="outline-purple" disabled>
+            Discord
+          </Button>
+          <Button variant="primary" disabled>
+            Conectar
+          </Button>
         </div>
 
         <button
@@ -47,7 +51,7 @@ export function Navbar() {
             </li>
           ))}
           <li>
-            <Button variant="primary" className="w-full">
+            <Button variant="primary" className="w-full" disabled>
               Conectar
             </Button>
           </li>
