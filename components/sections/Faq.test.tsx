@@ -19,6 +19,12 @@ describe("Faq", () => {
     const secondButton = screen.getByRole("button", { name: faq[1].question });
     expect(secondButton).toHaveAttribute("aria-expanded", "false");
 
+    // Verify multiple items can be open simultaneously (not a single-open accordion)
+    await user.click(secondButton);
+    expect(firstButton).toHaveAttribute("aria-expanded", "true");
+    expect(secondButton).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText(faq[1].answer)).toBeVisible();
+
     await user.click(firstButton);
     expect(firstButton).toHaveAttribute("aria-expanded", "false");
   });
