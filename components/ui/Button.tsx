@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes } from "react";
+import { twMerge } from "tailwind-merge";
 
 type ButtonVariant = "primary" | "outline-purple" | "outline-cyan";
 
@@ -15,7 +16,11 @@ const variantClasses: Record<ButtonVariant, string> = {
 export function Button({ variant = "primary", className = "", ...props }: ButtonProps) {
   return (
     <button
-      className={`rounded-full px-6 py-3 text-sm uppercase tracking-wide transition-all duration-200 hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 ${variantClasses[variant]} ${className}`}
+      className={twMerge(
+        "rounded-full px-6 py-3 text-sm uppercase tracking-wide transition-all duration-200 hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100",
+        variantClasses[variant],
+        className
+      )}
       {...props}
     />
   );
