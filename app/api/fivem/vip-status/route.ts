@@ -1,12 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { VipTier } from "@/lib/content";
-
-const TIER_RANK: Record<VipTier, number> = { bronce: 1, plata: 2, oro: 3 };
-
-function isVipTier(key: string): key is VipTier {
-  return key in TIER_RANK;
-}
+import { getActiveVipTier } from "@/lib/purchases/active-tier";
 
 export async function GET(request: NextRequest) {
   const secret = request.headers.get("x-fivem-secret");
@@ -30,14 +24,8 @@ export async function GET(request: NextRequest) {
   }
 
   const rows = purchases ?? [];
-  const now = Date.now();
 
-  const activeTiers = rows
-    .filter((p) => p.item_type === "vip" && p.expires_at !== null && new Date(p.expires_at).getTime() > now)
-    .map((p) => p.item_key)
-    .filter(isVipTier);
-
-  const tier = activeTiers.length > 0 ? activeTiers.reduce((best, key) => (TIER_RANK[key] > TIER_RANK[best] ? key : best)) : null;
+  const tier = getActiveVipTier(rows);
 
   const expiresAt = tier
     ? rows

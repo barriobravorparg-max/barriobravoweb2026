@@ -6,7 +6,8 @@ import type { VipTier } from "@/lib/content";
 
 export async function GET(request: NextRequest) {
   const auth = request.headers.get("authorization");
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || auth !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
@@ -26,7 +27,44 @@ export async function GET(request: NextRequest) {
   for (const purchase of expired ?? []) {
     try {
       const roleId = getVipRoleId(purchase.item_key as VipTier);
-      if (roleId) {
+      if (!roleId) {
+        // Sin rol configurado para este tier: no hay nada que revocar todavía.
+        // No marcamos discord_role_revoked_at para que, una vez que se configure
+        // la variable DISCORD_ROLE_VIP_* correspondiente, la próxima corrida del
+        // cron encuentre esta fila de nuevo y sí revoque el rol.
+        console.warn("[cron/expire-vips] No hay rol de Discord configurado para el tier", {
+          purchaseId: purchase.id,
+          discordId: purchase.discord_id,
+          itemKey: purchase.item_key,
+        });
+        continue;
+      }
+
+      // Si el mismo discord_id ya renovó este mismo tier (otra fila del mismo
+      // item_key todavía activa), no hay que revocar el rol: solo cerramos esta
+      // fila vencida como procesada.
+      const { data: activeRenewal, error: renewalError } = await admin
+        .from("purchases")
+        .select("id")
+        .eq("discord_id", purchase.discord_id)
+        .eq("item_type", "vip")
+        .eq("item_key", purchase.item_key)
+        .neq("id", purchase.id)
+        .gt("expires_at", new Date().toISOString())
+        .limit(1);
+
+      if (renewalError) {
+        console.error("Error checking for an active renewal of the same VIP tier", {
+          purchaseId: purchase.id,
+          discordId: purchase.discord_id,
+          itemKey: purchase.item_key,
+          error: renewalError,
+        });
+        continue;
+      }
+
+      const hasActiveRenewal = (activeRenewal ?? []).length > 0;
+      if (!hasActiveRenewal) {
         await revokeDiscordRole(purchase.discord_id, roleId);
       }
 

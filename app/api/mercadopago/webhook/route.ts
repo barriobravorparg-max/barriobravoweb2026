@@ -10,6 +10,15 @@ const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
+
+  if (body?.type && body.type !== "payment") {
+    // Mercado Pago manda otros tipos de notificación (merchant_order, etc.) al
+    // mismo notification_url. getPayment solo sabe resolver IDs de pago, así
+    // que tirar cualquier otro tipo ahí rompería con un 500 sin capturar y MP
+    // reintentaría para siempre.
+    return NextResponse.json({ ok: true });
+  }
+
   const paymentId = body?.data?.id as string | undefined;
 
   if (!paymentId) {
@@ -75,6 +84,12 @@ export async function POST(request: NextRequest) {
           error: grantError,
         });
       }
+    } else {
+      console.warn("[mercadopago/webhook] No hay rol de Discord configurado para el tier", {
+        discordId,
+        itemKey,
+        mpPaymentId: String(payment.id),
+      });
     }
   }
 

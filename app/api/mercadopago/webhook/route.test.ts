@@ -17,8 +17,12 @@ vi.mock("@/lib/discord/roles", () => ({
   grantDiscordRole: (discordId: string, roleId: string) => grantDiscordRoleMock(discordId, roleId),
 }));
 
+const getVipRoleIdMock = vi.fn((tier: string): string | undefined => {
+  void tier;
+  return "role-plata-id";
+});
 vi.mock("@/lib/discord/role-map", () => ({
-  getVipRoleId: () => "role-plata-id",
+  getVipRoleId: (tier: string) => getVipRoleIdMock(tier),
 }));
 
 import { POST } from "./route";
@@ -36,7 +40,18 @@ describe("POST /api/mercadopago/webhook", () => {
     insertMock.mockReset();
     fromMock.mockClear();
     grantDiscordRoleMock.mockReset();
+    getVipRoleIdMock.mockReset();
+    getVipRoleIdMock.mockImplementation(() => "role-plata-id");
     insertMock.mockResolvedValue({ error: null });
+  });
+
+  it("ignores non-payment notification types without calling getPayment", async () => {
+    const res = await POST(makeRequest({ type: "merchant_order", data: { id: "1" } }));
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json).toEqual({ ok: true });
+    expect(getPaymentMock).not.toHaveBeenCalled();
+    expect(insertMock).not.toHaveBeenCalled();
   });
 
   it("ignores payments that are not approved", async () => {
@@ -138,5 +153,23 @@ describe("POST /api/mercadopago/webhook", () => {
     expect(consoleErrorSpy).toHaveBeenCalled();
 
     consoleErrorSpy.mockRestore();
+  });
+
+  it("logs a warning and skips grantDiscordRole when no Discord role is configured for the tier", async () => {
+    getPaymentMock.mockResolvedValue({
+      id: 46,
+      status: "approved",
+      metadata: { user_id: "u1", discord_id: "d1", item_type: "vip", item_key: "bronce" },
+    });
+    getVipRoleIdMock.mockImplementation(() => undefined);
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const res = await POST(makeRequest({ data: { id: "46" } }));
+
+    expect(res.status).toBe(200);
+    expect(grantDiscordRoleMock).not.toHaveBeenCalled();
+    expect(consoleWarnSpy).toHaveBeenCalled();
+
+    consoleWarnSpy.mockRestore();
   });
 });
