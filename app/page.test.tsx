@@ -17,12 +17,26 @@ vi.mock("@/components/loading/LoadingScreen", () => ({
   ),
 }));
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+const getSession = vi.fn();
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: async () => ({
+    auth: { getSession },
+  }),
+}));
+
 describe("Home", () => {
   it("keeps section content in the DOM under the loading overlay, then removes the overlay once it finishes", async () => {
+    getSession.mockResolvedValueOnce({ data: { session: null } });
     const user = userEvent.setup();
-    render(<Home />);
 
-    // Loading screen overlay is showing initially.
+    const element = await Home();
+    render(element);
+
     expect(screen.getByText("Cargando...")).toBeInTheDocument();
 
     // The real page content is already mounted underneath it — this is the
