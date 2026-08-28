@@ -1,21 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { facciones } from "@/lib/content";
+import { Tabs, tabPanelLabelledBy } from "@/components/ui/Tabs";
 
 export function Facciones() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const active = facciones[activeIndex];
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-    e.preventDefault();
-    const dir = e.key === "ArrowRight" ? 1 : -1;
-    const next = (activeIndex + dir + facciones.length) % facciones.length;
-    setActiveIndex(next);
-    tabRefs.current[next]?.focus();
-  }
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
@@ -24,33 +15,20 @@ export function Facciones() {
         <p className="mt-2 text-gray-400">Elegí tu camino dentro del barrio.</p>
       </div>
 
-      <div role="tablist" aria-label="Categorías de facciones" className="mt-10 flex gap-2 overflow-x-auto pb-2 sm:justify-center">
-        {facciones.map((f, i) => (
-          <button
-            key={f.category}
-            id={`facciones-tab-${i}`}
-            ref={(el) => {
-              tabRefs.current[i] = el;
-            }}
-            role="tab"
-            aria-selected={i === activeIndex}
-            aria-controls="facciones-panel"
-            tabIndex={i === activeIndex ? 0 : -1}
-            onClick={() => setActiveIndex(i)}
-            onKeyDown={handleKeyDown}
-            className={`shrink-0 rounded-full border px-5 py-2 text-sm uppercase tracking-wide transition-colors ${
-              i === activeIndex ? "border-peach text-peach" : "border-white/10 text-gray-400 hover:text-white"
-            }`}
-          >
-            {f.category}
-          </button>
-        ))}
+      <div className="mt-10">
+        <Tabs
+          items={facciones.map((f) => ({ label: f.category }))}
+          activeIndex={activeIndex}
+          onChange={setActiveIndex}
+          panelId="facciones-panel"
+          tablistLabel="Categorías de facciones"
+        />
       </div>
 
       <div
         id="facciones-panel"
         role="tabpanel"
-        aria-labelledby={`facciones-tab-${activeIndex}`}
+        aria-labelledby={tabPanelLabelledBy("facciones-panel", activeIndex)}
         tabIndex={0}
         className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2"
       >
