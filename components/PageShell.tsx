@@ -56,7 +56,7 @@ export function PageShell({ user }: PageShellProps) {
           <Staff />
         </AnimatedSection>
         <AnimatedSection>
-          <TiendaPreview />
+          <TiendaPreview user={user} />
         </AnimatedSection>
         <AnimatedSection>
           <Reglas />
