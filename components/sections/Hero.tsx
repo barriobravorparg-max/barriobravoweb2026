@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { hero } from "@/lib/content";
 import { Button } from "@/components/ui/Button";
-import { ImagePlaceholder } from "@/components/ui/ImagePlaceholder";
 
 const SERVER_IP = "Próximamente";
 
@@ -46,13 +46,16 @@ export function Hero() {
       </div>
 
       <div className="flex-1 order-first lg:order-2 lg:flex lg:justify-center">
-        {/* TODO: imagen — hero-token.png, 1200x1600px (3:4), ver spec §3.7 (variante ampliada, vertical) */}
-        <ImagePlaceholder
-          aspectClassName="aspect-[3/4]"
-          label="Token/insignia del hero"
-          todo="hero-token.png, 1200x1600px"
-          className="mx-auto w-64 sm:w-80 lg:h-full lg:w-auto"
-        />
+        <div className="relative mx-auto aspect-[3/4] w-64 sm:w-80 lg:h-full lg:w-auto">
+          <Image
+            src="/hero-image.png"
+            alt="La banda de Barrio Bravo RP"
+            fill
+            priority
+            sizes="(max-width: 1024px) 320px, 480px"
+            className="object-contain"
+          />
+        </div>
       </div>
     </section>
   );
