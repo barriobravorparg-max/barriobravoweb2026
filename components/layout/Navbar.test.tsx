@@ -42,5 +42,6 @@ describe("Navbar", () => {
     await userEvt.click(screen.getByRole("button", { name: /menú/i }));
     expect(screen.getAllByRole("link", { name: "Mi Cuenta" })).toHaveLength(2);
     expect(screen.getAllByRole("button", { name: "Salir" })).toHaveLength(2);
+    expect(screen.getAllByTestId("avatar")).toHaveLength(2);
   });
 });
