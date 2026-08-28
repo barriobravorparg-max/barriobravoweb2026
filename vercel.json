@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/cron/expire-vips", "schedule": "0 6 * * *" }
+  ]
+}
