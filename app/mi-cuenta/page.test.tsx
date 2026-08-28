@@ -5,8 +5,8 @@ const redirectMock = vi.fn();
 vi.mock("next/navigation", () => ({
   redirect: (url: string) => {
     redirectMock(url);
-    const error = new Error("NEXT_REDIRECT");
-    (error as any).digest = "NEXT_REDIRECT";
+    const error = new Error("NEXT_REDIRECT") as Error & { digest: string };
+    error.digest = "NEXT_REDIRECT";
     throw error;
   },
 }));
@@ -25,8 +25,8 @@ describe("MiCuentaPage", () => {
     try {
       await MiCuentaPage();
       expect.fail("Expected redirect to be called");
-    } catch (error: any) {
-      if (error.message === "NEXT_REDIRECT") {
+    } catch (error) {
+      if (error instanceof Error && error.message === "NEXT_REDIRECT") {
         expect(redirectMock).toHaveBeenCalledWith("/");
       } else {
         throw error;
