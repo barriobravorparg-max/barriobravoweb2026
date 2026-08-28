@@ -9,10 +9,12 @@ vi.mock("next/navigation", () => ({
 }));
 
 const thenMock = vi.fn((cb: (result: { data: unknown[] }) => void) => cb({ data: [] }));
+const orderMock = vi.fn(() => ({ then: thenMock }));
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
     from: () => ({
-      select: () => ({ then: thenMock, order: () => ({ then: thenMock }) }),
+      // PurchaseHistory calls .select().order().then(); VipStatus calls .select().then() directly.
+      select: () => ({ then: thenMock, order: orderMock }),
     }),
   }),
 }));
@@ -37,17 +39,26 @@ describe("AccountTabs", () => {
     expect(screen.queryByText("Fundador")).not.toBeInTheDocument();
   });
 
-  it("shows real purchase history instead of the empty EmptyState copy when the tab is selected", async () => {
+  it("renders real purchase rows from Supabase when the tab is selected", async () => {
+    thenMock.mockImplementation((cb) =>
+      cb({ data: [{ id: "1", item_type: "vip", item_key: "plata", amount_ars: 7000, purchased_at: "2026-08-01T00:00:00Z" }] })
+    );
     const userEvt = userEvent.setup();
     render(<AccountTabs user={user} />);
     await userEvt.click(screen.getByRole("tab", { name: "Historial de compras" }));
-    expect(await screen.findByText("Todavía no hiciste ninguna compra en la tienda.")).toBeInTheDocument();
+    // "plata" only appears if PurchaseHistory actually mapped the mocked row into the DOM —
+    // the old static EmptyState never rendered an item_key.
+    expect(await screen.findByText("plata")).toBeInTheDocument();
   });
 
-  it("shows VIP status instead of the old static EmptyState when the tab is selected", async () => {
+  it("computes the active VIP tier from real purchase data when the tab is selected", async () => {
+    const future = new Date(Date.now() + 10_000).toISOString();
+    thenMock.mockImplementation((cb) => cb({ data: [{ item_type: "vip", item_key: "oro", expires_at: future }] }));
     const userEvt = userEvent.setup();
     render(<AccountTabs user={user} />);
     await userEvt.click(screen.getByRole("tab", { name: "VIP activo" }));
-    expect(await screen.findByText("No tenés un plan VIP activo por el momento.")).toBeInTheDocument();
+    // "VIP Oro" only appears if VipStatus ran getActiveVipTier against the mocked row and looked
+    // up the label in vipTiers — the old static EmptyState never rendered a tier label.
+    expect(await screen.findByText("VIP Oro")).toBeInTheDocument();
   });
 });
