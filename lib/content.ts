@@ -73,8 +73,21 @@ export const facciones: Faccion[] = [
   {
     category: "Civil",
     jobs: [
-      { name: "Taxista", description: "Movete por la ciudad y generá ingresos." },
-      { name: "Mecánico", description: "Reparación y tuning de vehículos." },
+      { name: "Repartidor de Pizzas", description: "Solo. Tomá pedidos de la pizzería y repartilos por la ciudad." },
+      { name: "Repartidor de Diarios", description: "Solo. Repartí diarios casa por casa por la ciudad." },
+      { name: "Puesto de Panchos", description: "Solo. Instalá tu carrito donde quieras y vendeles comida a los vecinos." },
+      { name: "Autoelevadorista", description: "Solo. Cargá pallets en el tráiler con la autoelevadora." },
+      { name: "Jardinero", description: "Solo. Mantené jardines con rastrillo y cortadora de pasto." },
+      { name: "Camionero", description: "Solo. Enganchá el tráiler y hacé entregas por toda la ciudad." },
+      { name: "Auxilio Mecánico", description: "Solo. Respondé llamados para asistir vehículos varados: combustible, grúa, gomas." },
+      { name: "Colectivero", description: "Solo. Elegí una línea y manejá tu recorrido." },
+      { name: "Buscador de Tesoros", description: "Solo. Rastreá objetos de valor con un detector de metales." },
+      { name: "Bomberos", description: "Solo o en equipo. Respondé llamados de incendio y salí a intervenir." },
+      { name: "Cazador", description: "Solo o en equipo. Cazá en las zonas habilitadas del mapa." },
+      { name: "Preparación de Autos", description: "Solo o en equipo. Armá proyectos de autos y ganá plata con cada uno." },
+      { name: "Buzo", description: "Solo o en equipo. Buceá y recolectá objetos y criaturas del fondo del mar." },
+      { name: "Granjero", description: "Solo o en equipo. Cosechá trigo y entregá los fardos en el centro de acopio." },
+      { name: "Electricista", description: "Solo o en equipo. Solucioná problemas eléctricos: postes, transformadores, cajas." },
     ],
   },
   {

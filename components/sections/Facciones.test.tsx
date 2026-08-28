@@ -9,10 +9,10 @@ describe("Facciones", () => {
     render(<Facciones />);
 
     expect(screen.getByText("Policía")).toBeInTheDocument();
-    expect(screen.queryByText("Taxista")).not.toBeInTheDocument();
+    expect(screen.queryByText("Repartidor de Pizzas")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "Civil" }));
-    expect(screen.getByText("Taxista")).toBeInTheDocument();
+    expect(screen.getByText("Repartidor de Pizzas")).toBeInTheDocument();
     expect(screen.queryByText("Policía")).not.toBeInTheDocument();
   });
 
@@ -39,7 +39,7 @@ describe("Facciones", () => {
     expect(emergencyTab).toHaveAttribute("aria-selected", "false");
     expect(civilTab).toHaveAttribute("tabindex", "0");
     expect(civilTab).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByText("Taxista")).toBeInTheDocument();
+    expect(screen.getByText("Repartidor de Pizzas")).toBeInTheDocument();
   });
 
   it("wraps around to the last tab when pressing ArrowLeft on the first tab", async () => {
