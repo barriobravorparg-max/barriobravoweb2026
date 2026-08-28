@@ -44,6 +44,18 @@ describe("POST /api/mercadopago/create-preference", () => {
     expect(res.status).toBe(404);
   });
 
+  it("returns 400 for an invalid itemType", async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: "u1", user_metadata: { provider_id: "d1" } } } });
+    const res = await POST(makeRequest({ itemType: "invalid", itemKey: "plata" }));
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when itemKey is missing", async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: "u1", user_metadata: { provider_id: "d1" } } } });
+    const res = await POST(makeRequest({ itemType: "vip" }));
+    expect(res.status).toBe(400);
+  });
+
   it("creates a preference and returns the checkout URL for a valid request", async () => {
     getUserMock.mockResolvedValue({ data: { user: { id: "u1", user_metadata: { provider_id: "d1" } } } });
     createPreferenceMock.mockResolvedValue("https://mp.example/checkout/1");
@@ -54,7 +66,14 @@ describe("POST /api/mercadopago/create-preference", () => {
     expect(res.status).toBe(200);
     expect(json).toEqual({ checkoutUrl: "https://mp.example/checkout/1" });
     expect(createPreferenceMock).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: "u1", discordId: "d1", itemType: "vip", itemKey: "plata" })
+      expect.objectContaining({
+        userId: "u1",
+        discordId: "d1",
+        itemType: "vip",
+        itemKey: "plata",
+        priceArs: 7000,
+        label: "VIP Plata",
+      })
     );
   });
 });
