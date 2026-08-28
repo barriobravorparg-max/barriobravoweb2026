@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Tabs, tabPanelLabelledBy } from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { AccountDetails } from "./AccountDetails";
+import { PurchaseHistory } from "./PurchaseHistory";
+import { VipStatus } from "./VipStatus";
 import type { AppUser } from "@/lib/supabase/user";
 
 const TAB_LABELS = ["Datos de cuenta", "Perfil de Personaje", "Historial de compras", "VIP activo"];
@@ -38,12 +40,8 @@ export function AccountTabs({ user }: AccountTabsProps) {
             description="Acá vas a ver tus personajes, vehículos y propiedades una vez que te conectes al servidor."
           />
         )}
-        {activeIndex === 2 && (
-          <EmptyState title="Historial de compras" description="Todavía no hiciste ninguna compra en la tienda." />
-        )}
-        {activeIndex === 3 && (
-          <EmptyState title="VIP activo" description="No tenés un plan VIP activo por el momento." />
-        )}
+        {activeIndex === 2 && <PurchaseHistory />}
+        {activeIndex === 3 && <VipStatus />}
       </div>
     </div>
   );
