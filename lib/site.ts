@@ -1,1 +1,1 @@
-export const SITE_URL = "https://barriobravorp.com";
+export const SITE_URL = "https://barriobravorp.vercel.app";
