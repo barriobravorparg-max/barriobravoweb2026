@@ -44,8 +44,18 @@ export function Staff() {
                 </>
               )}
             </TiltCard>
-            <p className="mt-3 font-display text-lg uppercase text-white">{member.alias}</p>
-            <p className="text-sm text-gray-500">{member.role}</p>
+            {member.name ? (
+              <>
+                <p className="mt-3 font-display text-lg uppercase text-white">{member.name}</p>
+                <p className="text-xs uppercase tracking-wide text-cyan">{member.alias}</p>
+                <p className="mt-1 text-sm text-gray-500">{member.role}</p>
+              </>
+            ) : (
+              <>
+                <p className="mt-3 font-display text-lg uppercase text-white">{member.alias}</p>
+                <p className="text-sm text-gray-500">{member.role}</p>
+              </>
+            )}
           </motion.div>
         ))}
       </div>

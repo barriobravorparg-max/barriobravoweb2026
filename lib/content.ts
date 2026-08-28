@@ -12,6 +12,7 @@ export interface StaffMember {
   alias: string;
   role: string;
   photo?: string;
+  name?: string;
 }
 
 export interface FaccionJob {
@@ -160,7 +161,7 @@ export const facciones: Faccion[] = [
 ];
 
 export const staff: StaffMember[] = [
-  { alias: "Fundador", role: "Dirección del proyecto", photo: "/staff-fundador.jpg" },
+  { name: "RK", alias: "Fundador", role: "Dirección y desarrollador del proyecto", photo: "/staff-fundador.jpg" },
   { alias: "Co-fundador", role: "Desarrollo" },
   { alias: "Admin", role: "Moderación y soporte" },
 ];
