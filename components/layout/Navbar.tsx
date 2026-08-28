@@ -49,11 +49,14 @@ export function Navbar({ user }: NavbarProps) {
         <div className="hidden items-center gap-3 md:flex">
           {user ? (
             <>
-              {user.avatarUrl ? (
-                <Image src={user.avatarUrl} alt="" width={32} height={32} className="rounded-full" data-testid="avatar" />
-              ) : (
-                <div className="h-8 w-8 rounded-full bg-purple/10" data-testid="avatar" />
-              )}
+              <div className="flex items-center gap-2">
+                {user.avatarUrl ? (
+                  <Image src={user.avatarUrl} alt="" width={32} height={32} className="rounded-full" data-testid="avatar" />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-purple/10" data-testid="avatar" />
+                )}
+                <span className="text-sm text-gray-300">{user.displayName}</span>
+              </div>
               <a href="/mi-cuenta" className="text-sm uppercase tracking-wide text-gray-300 hover:text-peach">
                 Mi Cuenta
               </a>
@@ -101,6 +104,7 @@ export function Navbar({ user }: NavbarProps) {
                   ) : (
                     <div className="h-8 w-8 rounded-full bg-purple/10" data-testid="avatar" />
                   )}
+                  <span className="text-sm text-gray-300">{user.displayName}</span>
                 </div>
                 <a
                   href="/mi-cuenta"

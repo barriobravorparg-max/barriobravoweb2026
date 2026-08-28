@@ -34,6 +34,7 @@ describe("Navbar", () => {
     expect(screen.getByRole("link", { name: "Mi Cuenta" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Salir" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Discord" })).not.toBeInTheDocument();
+    expect(screen.getByText("Fundador")).toBeInTheDocument();
   });
 
   it("shows Mi Cuenta and Salir in the mobile menu too when there is a session", async () => {
@@ -43,5 +44,6 @@ describe("Navbar", () => {
     expect(screen.getAllByRole("link", { name: "Mi Cuenta" })).toHaveLength(2);
     expect(screen.getAllByRole("button", { name: "Salir" })).toHaveLength(2);
     expect(screen.getAllByTestId("avatar")).toHaveLength(2);
+    expect(screen.getAllByText("Fundador")).toHaveLength(2);
   });
 });
