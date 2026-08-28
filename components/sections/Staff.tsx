@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { staff } from "@/lib/content";
 import { ImagePlaceholder } from "@/components/ui/ImagePlaceholder";
 import { TiltCard } from "@/components/ui/TiltCard";
@@ -23,14 +24,25 @@ export function Staff() {
             transition={{ delay: i * 0.05 }}
             className="text-center"
           >
-            {/* TODO: imagen — staff-{alias}.jpg, 400x400px, ver spec §3.7 */}
             <TiltCard>
-              <ImagePlaceholder
-                aspectClassName="aspect-square"
-                label={`Avatar de ${member.alias}`}
-                todo={`staff-${member.alias.toLowerCase()}.jpg, 400x400px`}
-                className="rounded-full"
-              />
+              {member.photo ? (
+                <div className="relative aspect-square w-full">
+                  <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-cyan/50 blur-2xl" aria-hidden="true" />
+                  <div className="relative h-full w-full overflow-hidden rounded-full ring-2 ring-cyan">
+                    <Image src={member.photo} alt={`Avatar de ${member.alias}`} fill className="object-cover" />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* TODO: imagen — staff-{alias}.jpg, 400x400px, ver spec §3.7 */}
+                  <ImagePlaceholder
+                    aspectClassName="aspect-square"
+                    label={`Avatar de ${member.alias}`}
+                    todo={`staff-${member.alias.toLowerCase()}.jpg, 400x400px`}
+                    className="rounded-full"
+                  />
+                </>
+              )}
             </TiltCard>
             <p className="mt-3 font-display text-lg uppercase text-white">{member.alias}</p>
             <p className="text-sm text-gray-500">{member.role}</p>
