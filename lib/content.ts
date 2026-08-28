@@ -13,9 +13,17 @@ export interface StaffMember {
   role: string;
 }
 
+export interface FaccionJob {
+  name: string;
+  description: string;
+  color?: string;
+  reserved?: boolean;
+}
+
 export interface Faccion {
   category: "Servicios de Emergencia" | "Civil" | "Criminal" | "Negocios";
-  jobs: { name: string; description: string }[];
+  jobs: FaccionJob[];
+  footer?: string;
 }
 
 export interface Regla {
@@ -93,9 +101,44 @@ export const facciones: Faccion[] = [
   {
     category: "Criminal",
     jobs: [
-      { name: "Banda independiente", description: "Organizá tu propia facción criminal." },
-      { name: "Contrabando", description: "Rutas y negocios al margen de la ley." },
+      {
+        name: "Ballas",
+        description: "Controlan buena parte del sur de la ciudad — territorio ganado a pulso, no se lo regalan a nadie.",
+        color: "#8B00FF",
+      },
+      {
+        name: "Families",
+        description: "La banda más reconocida del barrio, con historia y lealtad de sobra.",
+        color: "#2ECC71",
+        reserved: true,
+      },
+      {
+        name: "Vagos",
+        description: "Fuerte presencia en el este, conocidos por moverse rápido y no dejar cabos sueltos.",
+        color: "#F5C518",
+      },
+      {
+        name: "Triads",
+        description: "Negocios que van mucho más allá de la calle — discreción ante todo.",
+        color: "#E63946",
+      },
+      {
+        name: "Marabunta Grande",
+        description: "Lealtad interna a muerte y un territorio que defienden con todo.",
+        color: "#14B8A6",
+      },
+      {
+        name: "Lost MC",
+        description: "Motociclistas fuera de la ley, tan familia entre ellos como amenaza para el resto.",
+        color: "#71717A",
+      },
+      {
+        name: "Aztecas",
+        description: "Raíces profundas en el barrio, defienden lo suyo hasta las últimas consecuencias.",
+        color: "#D97706",
+      },
     ],
+    footer: "¿Querés reservar tu banda? Sumate al Discord y enterate de todo lo que incluye.",
   },
   {
     category: "Negocios",

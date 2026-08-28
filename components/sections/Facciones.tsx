@@ -30,14 +30,27 @@ export function Facciones() {
         role="tabpanel"
         aria-labelledby={tabPanelLabelledBy("facciones-panel", activeIndex)}
         tabIndex={0}
-        className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2"
+        className="mt-8"
       >
-        {active.jobs.map((job) => (
-          <div key={job.name} className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
-            <h3 className="font-display text-xl uppercase text-white">{job.name}</h3>
-            <p className="mt-1 text-sm text-gray-400">{job.description}</p>
-          </div>
-        ))}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {active.jobs.map((job) => (
+            <div
+              key={job.name}
+              className="relative rounded-xl border border-white/10 bg-white/[0.03] p-5"
+              style={job.color ? { borderLeft: `4px solid ${job.color}` } : undefined}
+            >
+              {job.reserved && (
+                <span className="absolute -top-3 right-4 rounded-full bg-brand-gradient px-3 py-1 text-xs font-semibold uppercase text-base">
+                  Reservada
+                </span>
+              )}
+              <h3 className="font-display text-xl uppercase text-white">{job.name}</h3>
+              <p className="mt-1 text-sm text-gray-400">{job.description}</p>
+            </div>
+          ))}
+        </div>
+
+        {active.footer && <p className="mt-8 text-center text-sm text-cyan">{active.footer}</p>}
       </div>
     </section>
   );
