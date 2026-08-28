@@ -67,7 +67,7 @@ export function Navbar({ user }: NavbarProps) {
           ) : (
             <>
               <Button variant="outline-purple" onClick={handleLogin}>
-                Discord
+                Ingresar
               </Button>
               <Button variant="primary" disabled>
                 Conectar

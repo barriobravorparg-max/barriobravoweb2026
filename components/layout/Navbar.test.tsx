@@ -23,9 +23,9 @@ describe("Navbar", () => {
     expect(toggle).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("shows the Discord login button enabled and Conectar disabled when there is no session", () => {
+  it("shows the Ingresar login button enabled and Conectar disabled when there is no session", () => {
     render(<Navbar user={null} />);
-    expect(screen.getByRole("button", { name: "Discord" })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: "Ingresar" })).not.toBeDisabled();
     expect(screen.getByRole("button", { name: "Conectar" })).toBeDisabled();
   });
 
@@ -33,7 +33,7 @@ describe("Navbar", () => {
     render(<Navbar user={{ avatarUrl: null, displayName: "Fundador", email: null }} />);
     expect(screen.getByRole("link", { name: "Mi Cuenta" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Salir" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Discord" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ingresar" })).not.toBeInTheDocument();
     expect(screen.getByText("Fundador")).toBeInTheDocument();
   });
 

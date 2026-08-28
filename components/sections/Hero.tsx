@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { hero } from "@/lib/content";
 import { Button } from "@/components/ui/Button";
-import { HeroTokenLoader } from "@/components/three/HeroTokenLoader";
+import { ImagePlaceholder } from "@/components/ui/ImagePlaceholder";
 
 const SERVER_IP = "Próximamente";
 
@@ -46,7 +46,13 @@ export function Hero() {
       </div>
 
       <div className="flex-1 order-first lg:order-2">
-        <HeroTokenLoader />
+        {/* TODO: imagen — hero-token.png, 800x800px, ver spec §3.7 (variante ampliada) */}
+        <ImagePlaceholder
+          aspectClassName="aspect-square"
+          label="Token/insignia del hero"
+          todo="hero-token.png, 800x800px"
+          className="mx-auto w-64 sm:w-80"
+        />
       </div>
     </section>
   );
