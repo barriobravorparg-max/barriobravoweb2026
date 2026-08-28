@@ -19,7 +19,7 @@ export function Hero() {
   }
 
   return (
-    <section id="inicio" className="mx-auto flex max-w-7xl flex-col items-center gap-10 px-4 pb-20 pt-16 sm:px-6 lg:flex-row lg:pt-24">
+    <section id="inicio" className="mx-auto flex max-w-7xl flex-col items-center gap-10 px-4 pb-20 pt-16 sm:px-6 lg:flex-row lg:items-stretch lg:pt-24">
       <div className="flex-1 text-center lg:text-left lg:order-1">
         <h1 className="font-display text-5xl uppercase leading-none text-white sm:text-6xl lg:text-7xl">{hero.headline}</h1>
         <p className="mt-4 font-display text-2xl text-transparent bg-brand-gradient bg-clip-text sm:text-3xl">{hero.tagline}</p>
@@ -45,13 +45,13 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="flex-1 order-first lg:order-2">
-        {/* TODO: imagen — hero-token.png, 800x800px, ver spec §3.7 (variante ampliada) */}
+      <div className="flex-1 order-first lg:order-2 lg:flex lg:justify-center">
+        {/* TODO: imagen — hero-token.png, 1200x1600px (3:4), ver spec §3.7 (variante ampliada, vertical) */}
         <ImagePlaceholder
-          aspectClassName="aspect-square"
+          aspectClassName="aspect-[3/4]"
           label="Token/insignia del hero"
-          todo="hero-token.png, 800x800px"
-          className="mx-auto w-64 sm:w-80"
+          todo="hero-token.png, 1200x1600px"
+          className="mx-auto w-64 sm:w-80 lg:h-full lg:w-auto"
         />
       </div>
     </section>
