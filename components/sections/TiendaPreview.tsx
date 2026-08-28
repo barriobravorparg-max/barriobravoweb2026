@@ -12,8 +12,11 @@ interface TiendaPreviewProps {
 
 export function TiendaPreview({ user }: TiendaPreviewProps) {
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleBuy(itemType: ItemType, itemKey: string) {
+    setError(null);
+
     if (!user) {
       const supabase = createClient();
       await supabase.auth.signInWithOAuth({
@@ -33,7 +36,11 @@ export function TiendaPreview({ user }: TiendaPreviewProps) {
       const json = await res.json();
       if (res.ok && json.checkoutUrl) {
         window.location.href = json.checkoutUrl;
+      } else {
+        setError("No pudimos iniciar la compra. Probá de nuevo en un momento.");
       }
+    } catch {
+      setError("No pudimos iniciar la compra. Probá de nuevo en un momento.");
     } finally {
       setLoadingKey(null);
     }
@@ -44,6 +51,11 @@ export function TiendaPreview({ user }: TiendaPreviewProps) {
       <div className="text-center">
         <h2 className="font-display text-4xl uppercase text-white sm:text-5xl">Tienda</h2>
         <p className="mt-2 text-gray-400">VIP y vehículos, con entrega automática al conectarte al servidor.</p>
+        {error && (
+          <p role="alert" className="mt-4 text-sm text-coral">
+            {error}
+          </p>
+        )}
       </div>
 
       <div className="mt-10">

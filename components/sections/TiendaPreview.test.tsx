@@ -48,4 +48,35 @@ describe("TiendaPreview", () => {
       expect.objectContaining({ method: "POST" })
     );
   });
+
+  it("shows an error message and does not redirect when the create-preference call fails", async () => {
+    const initialHref = window.location.href;
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: false,
+      json: async () => ({}),
+    });
+
+    const user = userEvent.setup();
+    render(<TiendaPreview user={{ avatarUrl: null, displayName: "Fundador", email: null }} />);
+    await user.click(screen.getAllByRole("button", { name: "Comprar" })[0]);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "No pudimos iniciar la compra. Probá de nuevo en un momento."
+    );
+    expect(window.location.href).toBe(initialHref);
+  });
+
+  it("shows an error message when the fetch call itself throws (network error)", async () => {
+    const initialHref = window.location.href;
+    (fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("network down"));
+
+    const user = userEvent.setup();
+    render(<TiendaPreview user={{ avatarUrl: null, displayName: "Fundador", email: null }} />);
+    await user.click(screen.getAllByRole("button", { name: "Comprar" })[0]);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "No pudimos iniciar la compra. Probá de nuevo en un momento."
+    );
+    expect(window.location.href).toBe(initialHref);
+  });
 });
