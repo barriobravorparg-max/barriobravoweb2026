@@ -1,3 +1,6 @@
+export type ItemType = "vip" | "vehicle";
+export type VipTier = "bronce" | "plata" | "oro";
+
 export interface NavLink {
   href: string;
   label: string;
@@ -6,6 +9,20 @@ export interface NavLink {
 export interface Feature {
   title: string;
   description: string;
+}
+
+export interface VipTierDef {
+  key: VipTier;
+  label: string;
+  priceArs: number;
+  discordPerk: string;
+}
+
+export interface VehicleDef {
+  key: string;
+  label: string;
+  priceArs: number;
+  model: string;
 }
 
 export interface StaffMember {
@@ -187,8 +204,15 @@ export const comunidadStats = {
   miembrosDiscord: "Próximamente",
 };
 
-export const tiendaTiers = [
-  { name: "VIP Bronce", price: "Próximamente" },
-  { name: "VIP Plata", price: "Próximamente", popular: true },
-  { name: "VIP Oro", price: "Próximamente" },
+export const vipTiers: VipTierDef[] = [
+  { key: "bronce", label: "VIP Bronce", priceArs: 3000, discordPerk: "Rol con color + canal de texto VIP" },
+  { key: "plata", label: "VIP Plata", priceArs: 7000, discordPerk: "+ categoría privada (texto y voz)" },
+  { key: "oro", label: "VIP Oro", priceArs: 14000, discordPerk: "+ badge/ícono distintivo" },
+];
+
+export const vehicles: VehicleDef[] = [
+  { key: "moto", label: "Moto", priceArs: 3000, model: "bati2" },
+  { key: "auto", label: "Auto de lujo vanilla", priceArs: 8000, model: "windsor" },
+  { key: "lancha", label: "Lancha", priceArs: 10000, model: "marquis" },
+  { key: "helicoptero", label: "Helicóptero", priceArs: 30000, model: "supervolito2" },
 ];
