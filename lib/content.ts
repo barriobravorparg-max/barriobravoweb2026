@@ -46,7 +46,7 @@ export const hero = {
   headline: "BARRIO BRAVO RP",
   tagline: "Tu barrio, tus reglas, tu historia.",
   description:
-    "Un servidor de roleplay FiveM/QBCore hecho por y para la comunidad latinoamericana. Economía propia, facciones, vivienda y eventos en vivo — sumate a la whitelist.",
+    "Un servidor de roleplay serio en GTA V (FiveM), hecho por y para la comunidad latinoamericana que busca vivir una historia real, no solo jugar — con moderación activa y cero tolerancia a romper la inmersión. Economía propia, facciones, vivienda y eventos en vivo — postulate a la whitelist y demostrá que estás a la altura.",
 };
 
 export const features: Feature[] = [
