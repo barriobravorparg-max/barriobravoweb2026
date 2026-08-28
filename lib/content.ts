@@ -54,7 +54,11 @@ export const features: Feature[] = [
   { title: "Economía viva", description: "Trabajos, negocios y un mercado que reacciona a lo que hace la comunidad, no números fijos." },
   { title: "Vivienda y vehículos", description: "Sistema de propiedades y garages propio, con personalización real." },
   { title: "Eventos en vivo", description: "Staff activo organizando eventos IC y OOC de forma regular." },
-  { title: "Voz por proximidad", description: "Comunicación inmersiva dentro y fuera de los vehículos." },
+  {
+    title: "Moderación activa",
+    description:
+      "Un staff dividido por especialidad (soporte técnico, moderación en vivo, gestión de eventos) para que cualquier problema lo atienda quien realmente sabe resolverlo, no un solo mod haciendo malabares.",
+  },
   { title: "Comunidad activa", description: "Discord y TikTok con contenido y soporte constante." },
 ];
 
