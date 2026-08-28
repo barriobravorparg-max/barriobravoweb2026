@@ -41,6 +41,7 @@ describe("GET /api/cron/expire-vips", () => {
     selectResult.error = null;
     revokeDiscordRoleMock.mockReset();
     updateMock.mockClear();
+    updateEqMock.mockClear();
   });
 
   it("rejects requests without the correct bearer token", async () => {
@@ -65,5 +66,27 @@ describe("GET /api/cron/expire-vips", () => {
     expect(updateMock).toHaveBeenCalledWith({ discord_role_revoked_at: expect.any(String) });
     expect(updateEqMock).toHaveBeenCalledWith("id", "p1");
     expect(json).toEqual({ revoked: 1 });
+  });
+
+  it("keeps processing the rest of the batch when one purchase fails, and excludes it from the count", async () => {
+    selectResult.data = [
+      { id: "p1", discord_id: "d1", item_key: "plata" },
+      { id: "p2", discord_id: "d2", item_key: "plata" },
+    ];
+    revokeDiscordRoleMock.mockImplementationOnce(() => Promise.reject(new Error("Discord API respondió 404")));
+    revokeDiscordRoleMock.mockImplementationOnce(() => Promise.resolve());
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const res = await GET(makeRequest("Bearer cron-secret"));
+    const json = await res.json();
+
+    expect(revokeDiscordRoleMock).toHaveBeenNthCalledWith(1, "d1", "role-plata-id");
+    expect(revokeDiscordRoleMock).toHaveBeenNthCalledWith(2, "d2", "role-plata-id");
+    expect(updateEqMock).not.toHaveBeenCalledWith("id", "p1");
+    expect(updateEqMock).toHaveBeenCalledWith("id", "p2");
+    expect(json).toEqual({ revoked: 1 });
+    expect(consoleErrorSpy).toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
   });
 });

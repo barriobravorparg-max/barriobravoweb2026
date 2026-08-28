@@ -24,12 +24,36 @@ export async function GET(request: NextRequest) {
 
   let revoked = 0;
   for (const purchase of expired ?? []) {
-    const roleId = getVipRoleId(purchase.item_key as VipTier);
-    if (roleId) {
-      await revokeDiscordRole(purchase.discord_id, roleId);
+    try {
+      const roleId = getVipRoleId(purchase.item_key as VipTier);
+      if (roleId) {
+        await revokeDiscordRole(purchase.discord_id, roleId);
+      }
+
+      const { error: updateError } = await admin
+        .from("purchases")
+        .update({ discord_role_revoked_at: new Date().toISOString() })
+        .eq("id", purchase.id);
+
+      if (updateError) {
+        console.error("Error marking VIP purchase as processed", {
+          purchaseId: purchase.id,
+          discordId: purchase.discord_id,
+          itemKey: purchase.item_key,
+          error: updateError,
+        });
+        continue;
+      }
+
+      revoked += 1;
+    } catch (err) {
+      console.error("Error revoking expired VIP Discord role", {
+        purchaseId: purchase.id,
+        discordId: purchase.discord_id,
+        itemKey: purchase.item_key,
+        error: err,
+      });
     }
-    await admin.from("purchases").update({ discord_role_revoked_at: new Date().toISOString() }).eq("id", purchase.id);
-    revoked += 1;
   }
 
   return NextResponse.json({ revoked });
