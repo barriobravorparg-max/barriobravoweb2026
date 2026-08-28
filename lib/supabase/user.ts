@@ -18,3 +18,10 @@ export function toAppUser(user: User): AppUser {
     email: user.email ?? null,
   };
 }
+
+export function getDiscordId(user: User): string | null {
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  const providerId = typeof meta.provider_id === "string" ? meta.provider_id : null;
+  const sub = typeof meta.sub === "string" ? meta.sub : null;
+  return providerId || sub;
+}

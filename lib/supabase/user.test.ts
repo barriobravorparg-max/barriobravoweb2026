@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { User } from "@supabase/supabase-js";
-import { toAppUser } from "./user";
+import { toAppUser, getDiscordId } from "./user";
 
 function makeUser(metadata: Record<string, unknown> = {}, email: string | null = "fundador@example.com"): User {
   return {
@@ -41,5 +41,22 @@ describe("toAppUser", () => {
   it("returns a null avatarUrl when metadata has none", () => {
     const user = makeUser({});
     expect(toAppUser(user).avatarUrl).toBeNull();
+  });
+});
+
+describe("getDiscordId", () => {
+  it("prefers provider_id", () => {
+    const user = makeUser({ provider_id: "123456789", sub: "987654321" });
+    expect(getDiscordId(user)).toBe("123456789");
+  });
+
+  it("falls back to sub when provider_id is missing", () => {
+    const user = makeUser({ sub: "987654321" });
+    expect(getDiscordId(user)).toBe("987654321");
+  });
+
+  it("returns null when neither is present", () => {
+    const user = makeUser({});
+    expect(getDiscordId(user)).toBeNull();
   });
 });
