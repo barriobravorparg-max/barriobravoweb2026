@@ -67,6 +67,11 @@ describe("POST /api/mercadopago/webhook", () => {
         amount_ars: 7000,
       })
     );
+    const insertedPayload = insertMock.mock.calls[0][0];
+    expect(typeof insertedPayload.expires_at).toBe("string");
+    const expiresAtMs = new Date(insertedPayload.expires_at).getTime();
+    const expectedMs = Date.now() + 30 * 24 * 60 * 60 * 1000;
+    expect(Math.abs(expiresAtMs - expectedMs)).toBeLessThan(5000);
     expect(grantDiscordRoleMock).toHaveBeenCalledWith("d1", "role-plata-id");
   });
 
@@ -79,6 +84,13 @@ describe("POST /api/mercadopago/webhook", () => {
 
     await POST(makeRequest({ data: { id: "43" } }));
 
+    expect(insertMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        item_type: "vehicle",
+        item_key: "moto",
+        expires_at: null,
+      })
+    );
     expect(grantDiscordRoleMock).not.toHaveBeenCalled();
   });
 
@@ -107,5 +119,24 @@ describe("POST /api/mercadopago/webhook", () => {
     const res = await POST(makeRequest({ data: { id: "44" } }));
 
     expect(res.status).toBe(500);
+  });
+
+  it("still returns 200 for the recorded purchase when grantDiscordRole throws", async () => {
+    getPaymentMock.mockResolvedValue({
+      id: 45,
+      status: "approved",
+      metadata: { user_id: "u1", discord_id: "d1", item_type: "vip", item_key: "plata" },
+    });
+    grantDiscordRoleMock.mockRejectedValue(new Error("Discord API respondió 503"));
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const res = await POST(makeRequest({ data: { id: "45" } }));
+
+    expect(res.status).toBe(200);
+    expect(insertMock).toHaveBeenCalledTimes(1);
+    expect(grantDiscordRoleMock).toHaveBeenCalledWith("d1", "role-plata-id");
+    expect(consoleErrorSpy).toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
   });
 });

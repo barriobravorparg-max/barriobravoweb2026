@@ -60,7 +60,21 @@ export async function POST(request: NextRequest) {
   if (itemType === "vip") {
     const roleId = getVipRoleId(itemKey as VipTier);
     if (roleId) {
-      await grantDiscordRole(discordId, roleId);
+      try {
+        await grantDiscordRole(discordId, roleId);
+      } catch (grantError) {
+        // La compra ya quedó registrada (fila válida en `purchases`); un fallo acá
+        // no debe tirar abajo el webhook ni gatillar un reintento de Mercado Pago,
+        // porque el reintento pegaría contra el 23505 de arriba y jamás volvería
+        // a intentar otorgar el rol. Queda como intervención manual del operador.
+        console.error("[mercadopago/webhook] Falló grantDiscordRole", {
+          discordId,
+          roleId,
+          itemKey,
+          mpPaymentId: String(payment.id),
+          error: grantError,
+        });
+      }
     }
   }
 
