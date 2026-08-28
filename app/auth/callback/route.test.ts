@@ -36,4 +36,15 @@ describe("GET /auth/callback", () => {
 
     expect(response.headers.get("location")).toBe("http://localhost:3000/?auth_error=1");
   });
+
+  it("redirects to the forwarded host when x-forwarded-host is present and the code exchange succeeds", async () => {
+    exchangeCodeForSession.mockResolvedValueOnce({ error: null });
+    const request = new NextRequest("http://localhost:3000/auth/callback?code=abc123", {
+      headers: { "x-forwarded-host": "barriobravorp.com" },
+    });
+
+    const response = await GET(request);
+
+    expect(response.headers.get("location")).toBe("https://barriobravorp.com/mi-cuenta");
+  });
 });

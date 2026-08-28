@@ -9,7 +9,15 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}/mi-cuenta`);
+      const forwardedHost = request.headers.get("x-forwarded-host");
+      const isLocalEnv = process.env.NODE_ENV === "development";
+      if (isLocalEnv) {
+        return NextResponse.redirect(`${origin}/mi-cuenta`);
+      } else if (forwardedHost) {
+        return NextResponse.redirect(`https://${forwardedHost}/mi-cuenta`);
+      } else {
+        return NextResponse.redirect(`${origin}/mi-cuenta`);
+      }
     }
   }
 
