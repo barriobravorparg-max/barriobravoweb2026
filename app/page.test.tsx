@@ -17,9 +17,10 @@ vi.mock("@/components/loading/LoadingScreen", () => ({
   ),
 }));
 
+const useSearchParamsMock = vi.fn(() => new URLSearchParams());
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => useSearchParamsMock(),
 }));
 
 const getSession = vi.fn();
@@ -49,5 +50,15 @@ describe("Home", () => {
 
     expect(screen.queryByText("Cargando...")).not.toBeInTheDocument();
     expect(screen.getByText("Qué te espera")).toBeInTheDocument();
+  });
+
+  it("shows the auth error banner when the URL has auth_error=1", async () => {
+    getSession.mockResolvedValueOnce({ data: { session: null } });
+    useSearchParamsMock.mockReturnValueOnce(new URLSearchParams("auth_error=1"));
+
+    const element = await Home();
+    render(element);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(/No pudimos conectarte con Discord/i);
   });
 });
