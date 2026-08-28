@@ -162,8 +162,6 @@ export const facciones: Faccion[] = [
 
 export const staff: StaffMember[] = [
   { name: "RK", alias: "Fundador", role: "Dirección y desarrollador del proyecto", photo: "/staff-fundador.jpg" },
-  { alias: "Co-fundador", role: "Desarrollo" },
-  { alias: "Admin", role: "Moderación y soporte" },
 ];
 
 export const reglas: Regla[] = [
