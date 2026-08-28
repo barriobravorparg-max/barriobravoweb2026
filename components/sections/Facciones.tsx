@@ -36,12 +36,19 @@ export function Facciones() {
           {active.jobs.map((job) => (
             <div
               key={job.name}
-              className="relative rounded-xl border border-white/10 bg-white/[0.03] p-5"
+              className={`relative rounded-xl border p-5 ${
+                job.featured ? "border-cyan bg-cyan/5 shadow-lg shadow-cyan/20" : "border-white/10 bg-white/[0.03]"
+              }`}
               style={job.color ? { borderLeft: `4px solid ${job.color}` } : undefined}
             >
               {job.reserved && (
                 <span className="absolute -top-3 right-4 rounded-full bg-brand-gradient px-3 py-1 text-xs font-semibold uppercase text-base">
                   Reservada
+                </span>
+              )}
+              {job.featured && (
+                <span className="absolute -top-3 right-4 rounded-full border border-cyan bg-base px-3 py-1 text-xs font-semibold uppercase text-cyan">
+                  Exclusivo
                 </span>
               )}
               <h3 className="font-display text-xl uppercase text-white">{job.name}</h3>

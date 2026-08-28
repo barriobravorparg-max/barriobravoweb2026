@@ -18,6 +18,7 @@ export interface FaccionJob {
   description: string;
   color?: string;
   reserved?: boolean;
+  featured?: boolean;
 }
 
 export interface Faccion {
@@ -143,8 +144,16 @@ export const facciones: Faccion[] = [
   {
     category: "Negocios",
     jobs: [
-      { name: "Dueño de local", description: "Montá y administrá tu propio negocio." },
-      { name: "Repartidor", description: "Logística y entregas dentro de la ciudad." },
+      { name: "Casino", description: "El Diamond Casino: mesas de juego, shows en vivo y la chance de ganar (o perderlo todo)." },
+      { name: "Vanilla Unicorn", description: "El local más conocido de Los Santos — trabajá la barra, la seguridad o el escenario." },
+      { name: "Vanilla Unicorn (Paleto)", description: "La sucursal del norte, el mismo ambiente en el corazón de Paleto Bay." },
+      { name: "Taller Bennys", description: "Especializados en tuning y modificaciones, para los que quieren un auto único." },
+      { name: "Los Santos Customs", description: "El taller de referencia de la ciudad: reparación y personalización de vehículos." },
+      {
+        name: "Casinos ilegales",
+        description: "Detrás de la fachada legal, hay quien mueve las fichas de otra manera — sin reglas, sin límites.",
+        featured: true,
+      },
     ],
   },
 ];

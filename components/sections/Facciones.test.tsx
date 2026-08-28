@@ -57,7 +57,7 @@ describe("Facciones", () => {
     expect(negocios).toHaveAttribute("aria-selected", "true");
     expect(emergencyTab).toHaveAttribute("tabindex", "-1");
     expect(emergencyTab).toHaveAttribute("aria-selected", "false");
-    expect(screen.getByText("Repartidor")).toBeInTheDocument();
+    expect(screen.getByText("Casino")).toBeInTheDocument();
   });
 
   it("wraps around to the first tab when pressing ArrowRight on the last tab", async () => {
