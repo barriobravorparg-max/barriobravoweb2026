@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { hero } from "@/lib/content";
 import { Button } from "@/components/ui/Button";
@@ -10,7 +10,6 @@ const SERVER_IP = "Próximamente";
 export function Hero() {
   const [copied, setCopied] = useState(false);
   const ipAvailable = SERVER_IP !== "Próximamente";
-  const bgRef = useRef<HTMLDivElement>(null);
 
   async function handleCopy() {
     if (!ipAvailable) return;
@@ -19,18 +18,9 @@ export function Hero() {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  function handleMouseMove(e: ReactMouseEvent<HTMLElement>) {
-    const el = bgRef.current;
-    if (!el || (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width - 0.5;
-    const py = (e.clientY - rect.top) / rect.height - 0.5;
-    el.style.transform = `translate(${(px * 14).toFixed(1)}px, ${(py * 14).toFixed(1)}px)`;
-  }
-
   return (
-    <section id="inicio" className="relative overflow-hidden bg-base" onMouseMove={handleMouseMove}>
-      <div ref={bgRef} className="absolute inset-0 scale-110 transition-transform duration-300 ease-out motion-reduce:!transition-none">
+    <section id="inicio" className="relative overflow-hidden bg-base">
+      <div className="absolute inset-0">
         <Image src="/hero-bg.png" alt="" fill priority sizes="100vw" className="object-contain object-center" />
       </div>
       <div className="absolute inset-0 bg-base/60" />
