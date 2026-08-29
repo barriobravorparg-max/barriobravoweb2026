@@ -10,12 +10,17 @@ vi.mock("next/navigation", () => ({
 
 const thenMock = vi.fn((cb: (result: { data: unknown[] }) => void) => cb({ data: [] }));
 const orderMock = vi.fn(() => ({ then: thenMock }));
+const leasesThenMock = vi.fn((cb: (result: { data: unknown[] }) => void) => cb({ data: [] }));
+const leasesOrderMock = vi.fn(() => ({ then: leasesThenMock }));
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
-    from: () => ({
+    from: (table: string) => {
+      if (table === "leases") {
+        return { select: () => ({ order: leasesOrderMock }) };
+      }
       // PurchaseHistory calls .select().order().then(); VipStatus calls .select().then() directly.
-      select: () => ({ then: thenMock, order: orderMock }),
-    }),
+      return { select: () => ({ then: thenMock, order: orderMock }) };
+    },
   }),
 }));
 
@@ -60,5 +65,12 @@ describe("AccountTabs", () => {
     // "VIP Oro" only appears if VipStatus ran getActiveVipTier against the mocked row and looked
     // up the label in vipTiers — the old static EmptyState never rendered a tier label.
     expect(await screen.findByText("VIP Oro")).toBeInTheDocument();
+  });
+
+  it("shows real lease history instead of a static EmptyState when the tab is selected", async () => {
+    const userEvt = userEvent.setup();
+    render(<AccountTabs user={user} />);
+    await userEvt.click(screen.getByRole("tab", { name: "Mis arrendamientos" }));
+    expect(await screen.findByText("Todavía no arrendaste ninguna banda, negocio o propiedad.")).toBeInTheDocument();
   });
 });

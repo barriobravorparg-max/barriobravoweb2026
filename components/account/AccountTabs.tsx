@@ -6,9 +6,10 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { AccountDetails } from "./AccountDetails";
 import { PurchaseHistory } from "./PurchaseHistory";
 import { VipStatus } from "./VipStatus";
+import { MyLeases } from "./MyLeases";
 import type { AppUser } from "@/lib/supabase/user";
 
-const TAB_LABELS = ["Datos de cuenta", "Perfil de Personaje", "Historial de compras", "VIP activo"];
+const TAB_LABELS = ["Datos de cuenta", "Perfil de Personaje", "Historial de compras", "VIP activo", "Mis arrendamientos"];
 
 interface AccountTabsProps {
   user: AppUser;
@@ -42,6 +43,7 @@ export function AccountTabs({ user }: AccountTabsProps) {
         )}
         {activeIndex === 2 && <PurchaseHistory />}
         {activeIndex === 3 && <VipStatus />}
+        {activeIndex === 4 && <MyLeases />}
       </div>
     </div>
   );
