@@ -15,8 +15,10 @@ describe("content.ts", () => {
     expect(faq.length).toBeGreaterThanOrEqual(5);
   });
 
-  it("nav links point to in-page anchors", () => {
-    for (const link of navLinks) expect(link.href.startsWith("#")).toBe(true);
+  it("nav links point to either an in-page anchor or a real app route", () => {
+    for (const link of navLinks) {
+      expect(link.href.startsWith("#") || link.href.startsWith("/")).toBe(true);
+    }
   });
 
   it("every regla has a valid severity level", () => {

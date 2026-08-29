@@ -81,6 +81,7 @@ export const navLinks: NavLink[] = [
   { href: "#reglas", label: "Reglas" },
   { href: "#faq", label: "FAQ" },
   { href: "#comunidad", label: "Comunidad" },
+  { href: "/arrendamientos", label: "Arrendamientos" },
 ];
 
 export const hero = {
