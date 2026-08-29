@@ -85,6 +85,19 @@ describe("POST /api/mercadopago/webhook-leases", () => {
     expect(notifyStaffChannelMock).not.toHaveBeenCalled();
   });
 
+  it("ignores a payment whose metadata period is neither mensual nor semestral", async () => {
+    getPaymentMock.mockResolvedValue({
+      id: 46,
+      status: "approved",
+      metadata: { user_id: "u1", discord_id: "d1", slot_key: "families", period: "semanal" },
+    });
+
+    const res = await POST(makeRequest({ data: { id: "46" } }));
+
+    expect(res.status).toBe(200);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
   it("handles the race-condition case (claimed: false) by notifying staff for manual review instead of delivering", async () => {
     getPaymentMock.mockResolvedValue({
       id: 44,

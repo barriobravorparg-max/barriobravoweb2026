@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   const slotKey = metadata.slot_key as string | undefined;
   const period = metadata.period as Period | undefined;
 
-  if (!userId || !discordId || !slotKey || !period) {
+  if (!userId || !discordId || !slotKey || (period !== "mensual" && period !== "semestral")) {
     return NextResponse.json({ ok: true });
   }
 
