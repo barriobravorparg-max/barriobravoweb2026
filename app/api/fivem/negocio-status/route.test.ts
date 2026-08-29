@@ -49,7 +49,7 @@ describe("GET /api/fivem/negocio-status", () => {
 
   it("returns the job name and boss grade for an active negocio lease", async () => {
     const future = new Date(Date.now() + 10_000).toISOString();
-    selectResult.data = [{ id: "l1", slot_key: "casino", expires_at: future }];
+    selectResult.data = [{ id: "l1", slot_key: "casino", expires_at: future, slots: { current_lease_id: "l1" } }];
     const res = await GET(makeRequest("d1", "bridge-secret"));
     const json = await res.json();
     expect(json.activeNegocioJobs).toEqual([{ jobName: "casino", bossGrade: 4 }]);
@@ -57,7 +57,7 @@ describe("GET /api/fivem/negocio-status", () => {
 
   it("ignores an expired negocio lease", async () => {
     const past = new Date(Date.now() - 10_000).toISOString();
-    selectResult.data = [{ id: "l1", slot_key: "casino", expires_at: past }];
+    selectResult.data = [{ id: "l1", slot_key: "casino", expires_at: past, slots: { current_lease_id: "l1" } }];
     const res = await GET(makeRequest("d1", "bridge-secret"));
     const json = await res.json();
     expect(json.activeNegocioJobs).toEqual([]);
@@ -65,7 +65,7 @@ describe("GET /api/fivem/negocio-status", () => {
 
   it("ignores banda/propiedad leases entirely", async () => {
     const future = new Date(Date.now() + 10_000).toISOString();
-    selectResult.data = [{ id: "l1", slot_key: "families", expires_at: future }];
+    selectResult.data = [{ id: "l1", slot_key: "families", expires_at: future, slots: { current_lease_id: "l1" } }];
     const res = await GET(makeRequest("d1", "bridge-secret"));
     const json = await res.json();
     expect(json.activeNegocioJobs).toEqual([]);
@@ -74,8 +74,8 @@ describe("GET /api/fivem/negocio-status", () => {
   it("returns one entry per active negocio lease when a discord_id holds more than one", async () => {
     const future = new Date(Date.now() + 10_000).toISOString();
     selectResult.data = [
-      { id: "l1", slot_key: "casino", expires_at: future },
-      { id: "l2", slot_key: "taller_bennys", expires_at: future },
+      { id: "l1", slot_key: "casino", expires_at: future, slots: { current_lease_id: "l1" } },
+      { id: "l2", slot_key: "taller_bennys", expires_at: future, slots: { current_lease_id: "l2" } },
     ];
     const res = await GET(makeRequest("d1", "bridge-secret"));
     const json = await res.json();
@@ -83,5 +83,24 @@ describe("GET /api/fivem/negocio-status", () => {
       { jobName: "casino", bossGrade: 4 },
       { jobName: "bennys", bossGrade: 4 },
     ]);
+  });
+
+  it("ignores a race-condition loser's lease — a future expires_at that does not actually hold the slot", async () => {
+    const future = new Date(Date.now() + 10_000).toISOString();
+    // Este lease (l1) perdió la condición de carrera: claim_slot igual le
+    // inserta una fila con expires_at futuro (para auditoría/reembolso),
+    // pero el slot lo tiene otro lease (l2) — current_lease_id no es l1.
+    selectResult.data = [{ id: "l1", slot_key: "casino", expires_at: future, slots: { current_lease_id: "l2" } }];
+    const res = await GET(makeRequest("d1", "bridge-secret"));
+    const json = await res.json();
+    expect(json.activeNegocioJobs).toEqual([]);
+  });
+
+  it("handles the embedded slots relationship coming back as a one-element array", async () => {
+    const future = new Date(Date.now() + 10_000).toISOString();
+    selectResult.data = [{ id: "l1", slot_key: "casino", expires_at: future, slots: [{ current_lease_id: "l1" }] }];
+    const res = await GET(makeRequest("d1", "bridge-secret"));
+    const json = await res.json();
+    expect(json.activeNegocioJobs).toEqual([{ jobName: "casino", bossGrade: 4 }]);
   });
 });
