@@ -1,5 +1,6 @@
 {
   "crons": [
-    { "path": "/api/cron/expire-vips", "schedule": "0 6 * * *" }
+    { "path": "/api/cron/expire-vips", "schedule": "0 6 * * *" },
+    { "path": "/api/cron/expire-leases", "schedule": "15 6 * * *" }
   ]
 }
