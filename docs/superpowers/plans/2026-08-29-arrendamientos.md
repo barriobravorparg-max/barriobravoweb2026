@@ -1376,9 +1376,12 @@ git commit -m "feat: add the daily cron that releases expired lease slots and no
 - Create: `components/sections/ArrendamientosCatalog.tsx`
 - Test: `components/sections/ArrendamientosCatalog.test.tsx`
 - Modify: `lib/content.ts` (agregar el link de navegación)
+- Modify: `lib/content.test.ts`
 
 **Interfaces:**
 - Consumes: `bandas`, `negocios`, `propiedades`, `type Period` de `@/lib/content` (Task 1), `createClient` de `@/lib/supabase/client`, `AppUser`/`toAppUser` de `@/lib/supabase/user`, `createClient` (server) de `@/lib/supabase/server`, `Tabs`/`tabPanelLabelledBy` de `@/components/ui/Tabs`, `Button` de `@/components/ui/Button`, `Navbar`/`Footer` (existentes)
+
+**Nota importante:** `lib/content.test.ts` ya tiene un test ("nav links point to in-page anchors") que afirma que TODOS los `navLinks` empiezan con `#` — eso era cierto hasta ahora porque todos apuntaban a secciones de la landing. Agregar `/arrendamientos` (una página real, no un ancla) rompe ese test tal como está escrito. Hay que actualizarlo en el mismo paso en el que se agrega el link, no dejarlo roto.
 
 - [ ] **Step 1: Agregar el link de navegación a `lib/content.ts`**
 
@@ -1388,7 +1391,21 @@ En el array `navLinks` existente, agregar un ítem (no reescribir el array compl
 { href: "/arrendamientos", label: "Arrendamientos" },
 ```
 
-- [ ] **Step 2: Escribir el test de `ArrendamientosCatalog` (falla porque el componente no existe)**
+- [ ] **Step 2: Actualizar el test existente que ahora falla, `lib/content.test.ts`**
+
+Reemplazar el test `"nav links point to in-page anchors"` (que ahora es falso — no todos son anclas) por uno que refleje la realidad: todo link es o un ancla de la landing (`#...`) o una ruta real de la app (`/...`).
+
+```ts
+it("nav links point to either an in-page anchor or a real app route", () => {
+  for (const link of navLinks) {
+    expect(link.href.startsWith("#") || link.href.startsWith("/")).toBe(true);
+  }
+});
+```
+
+Correr `npx vitest run lib/content.test.ts` y confirmar que pasa (sigue siendo 1 test en ese `describe`, solo cambió la aserción).
+
+- [ ] **Step 3: Escribir el test de `ArrendamientosCatalog` (falla porque el componente no existe)**
 
 ```tsx
 // components/sections/ArrendamientosCatalog.test.tsx
@@ -1491,12 +1508,12 @@ describe("ArrendamientosCatalog", () => {
 });
 ```
 
-- [ ] **Step 3: Correr el test y verificar que falla**
+- [ ] **Step 4: Correr el test y verificar que falla**
 
 Run: `npx vitest run components/sections/ArrendamientosCatalog.test.tsx`
 Expected: FAIL — no se encuentra el módulo `./ArrendamientosCatalog`.
 
-- [ ] **Step 4: Implementar `components/sections/ArrendamientosCatalog.tsx`**
+- [ ] **Step 5: Implementar `components/sections/ArrendamientosCatalog.tsx`**
 
 ```tsx
 "use client";
@@ -1650,7 +1667,7 @@ export function ArrendamientosCatalog({ user }: ArrendamientosCatalogProps) {
 }
 ```
 
-- [ ] **Step 5: Implementar `app/arrendamientos/page.tsx`**
+- [ ] **Step 6: Implementar `app/arrendamientos/page.tsx`**
 
 ```tsx
 import { createClient } from "@/lib/supabase/server";
@@ -1677,20 +1694,20 @@ export default async function ArrendamientosPage() {
 }
 ```
 
-- [ ] **Step 6: Correr el test y verificar que pasa**
+- [ ] **Step 7: Correr el test y verificar que pasa**
 
 Run: `npx vitest run components/sections/ArrendamientosCatalog.test.tsx`
 Expected: PASS (8 tests)
 
-- [ ] **Step 7: Correr toda la suite**
+- [ ] **Step 8: Correr toda la suite**
 
 Run: `npm test`
-Expected: PASS en todos los archivos.
+Expected: PASS en todos los archivos (incluido el `lib/content.test.ts` actualizado en el Step 2).
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add lib/content.ts components/sections/ArrendamientosCatalog.tsx components/sections/ArrendamientosCatalog.test.tsx app/arrendamientos
+git add lib/content.ts lib/content.test.ts components/sections/ArrendamientosCatalog.tsx components/sections/ArrendamientosCatalog.test.tsx app/arrendamientos
 git commit -m "feat: add the Arrendamientos catalog page with live availability"
 ```
 
