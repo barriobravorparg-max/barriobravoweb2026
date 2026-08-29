@@ -47,7 +47,11 @@ create or replace function claim_slot(
   p_mp_payment_id text,
   p_amount_ars numeric,
   p_expires_at timestamptz
-) returns table(claimed boolean, lease_id uuid) as $$
+) returns table(claimed boolean, lease_id uuid)
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
 declare
   v_occupied_until timestamptz;
   v_lease_id uuid;
@@ -56,6 +60,14 @@ begin
   from slots
   where slot_key = p_slot_key
   for update;
+
+  if not found then
+    -- El slot_key no existe en la tabla slots (drift catálogo/seed). Devolver
+    -- claimed=false en vez de dejar que el insert de abajo viole la FK
+    -- leases.slot_key -> slots.slot_key (23503), que rompería el webhook.
+    return query select false, null::uuid;
+    return;
+  end if;
 
   if v_occupied_until is not null and v_occupied_until > now() then
     insert into leases (user_id, discord_id, slot_key, period, mp_payment_id, amount_ars, expires_at)
@@ -76,7 +88,17 @@ begin
 
   return query select true, v_lease_id;
 end;
-$$ language plpgsql security definer;
+$$;
+
+-- Por defecto Postgres otorga EXECUTE sobre funciones nuevas a PUBLIC, y
+-- Supabase expone automáticamente cada función del schema public como
+-- endpoint RPC de PostgREST para los roles anon/authenticated. Sin este
+-- revoke/grant, cualquier visitante podría llamar supabase.rpc('claim_slot',
+-- {...}) desde devtools con parámetros arbitrarios y reclamar un slot gratis,
+-- saltándose Mercado Pago por completo. Solo el webhook (service_role) debe
+-- poder invocarla.
+revoke all on function claim_slot(text, uuid, text, text, text, numeric, timestamptz) from public, anon, authenticated;
+grant execute on function claim_slot(text, uuid, text, text, text, numeric, timestamptz) to service_role;
 
 insert into slots (slot_key, slot_type, label) values
   ('ballas', 'banda', 'Ballas'),
