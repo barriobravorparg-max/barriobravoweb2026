@@ -62,6 +62,19 @@ export interface Testimonio {
   quote: string;
 }
 
+export type SlotType = "banda" | "negocio" | "propiedad";
+export type Period = "mensual" | "semestral";
+
+export interface LeaseSlotDef {
+  slotKey: string;
+  slotType: SlotType;
+  label: string;
+  priceMensual: number;
+  priceSemestral: number | null;
+  jobName?: string;
+  jobBossGrade?: number;
+}
+
 export const navLinks: NavLink[] = [
   { href: "#inicio", label: "Inicio" },
   { href: "#tienda", label: "Tienda" },
@@ -215,4 +228,29 @@ export const vehicles: VehicleDef[] = [
   { key: "auto", label: "Auto de lujo vanilla", priceArs: 8000, model: "windsor" },
   { key: "lancha", label: "Lancha", priceArs: 10000, model: "marquis" },
   { key: "helicoptero", label: "Helicóptero", priceArs: 30000, model: "supervolito2" },
+];
+
+export const bandas: LeaseSlotDef[] = [
+  { slotKey: "ballas", slotType: "banda", label: "Ballas", priceMensual: 30000, priceSemestral: 150000 },
+  { slotKey: "families", slotType: "banda", label: "Families", priceMensual: 30000, priceSemestral: 150000 },
+  { slotKey: "vagos", slotType: "banda", label: "Vagos", priceMensual: 30000, priceSemestral: 150000 },
+  { slotKey: "triads", slotType: "banda", label: "Triads", priceMensual: 30000, priceSemestral: 150000 },
+  { slotKey: "marabunta_grande", slotType: "banda", label: "Marabunta Grande", priceMensual: 30000, priceSemestral: 150000 },
+  { slotKey: "lost_mc", slotType: "banda", label: "Lost MC", priceMensual: 30000, priceSemestral: 150000 },
+  { slotKey: "aztecas", slotType: "banda", label: "Aztecas", priceMensual: 30000, priceSemestral: 150000 },
+];
+
+export const negocios: LeaseSlotDef[] = [
+  { slotKey: "casino", slotType: "negocio", label: "Casino", priceMensual: 45000, priceSemestral: 220000, jobName: "casino", jobBossGrade: 4 },
+  { slotKey: "vanilla_unicorn", slotType: "negocio", label: "Vanilla Unicorn", priceMensual: 35000, priceSemestral: 170000, jobName: "unicorn", jobBossGrade: 5 },
+  { slotKey: "taller_bennys", slotType: "negocio", label: "Taller Bennys", priceMensual: 30000, priceSemestral: 145000, jobName: "bennys", jobBossGrade: 4 },
+  { slotKey: "los_santos_customs", slotType: "negocio", label: "Los Santos Customs", priceMensual: 30000, priceSemestral: 145000, jobName: "mechanic", jobBossGrade: 4 },
+  { slotKey: "casinos_ilegales", slotType: "negocio", label: "Casinos ilegales", priceMensual: 40000, priceSemestral: 195000, jobName: "casino_ilegal", jobBossGrade: 4 },
+];
+
+export const propiedades: LeaseSlotDef[] = [
+  { slotKey: "casa_chica", slotType: "propiedad", label: "Casa chica", priceMensual: 15000, priceSemestral: null },
+  { slotKey: "casa_mediana", slotType: "propiedad", label: "Casa mediana", priceMensual: 25000, priceSemestral: null },
+  { slotKey: "casa_grande", slotType: "propiedad", label: "Casa grande", priceMensual: 40000, priceSemestral: null },
+  { slotKey: "casa_premium", slotType: "propiedad", label: "Casa premium", priceMensual: 60000, priceSemestral: null },
 ];
