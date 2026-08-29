@@ -67,10 +67,21 @@ describe("AccountTabs", () => {
     expect(await screen.findByText("VIP Oro")).toBeInTheDocument();
   });
 
-  it("shows real lease history instead of a static EmptyState when the tab is selected", async () => {
+  it("renders real lease rows from Supabase when the tab is selected", async () => {
+    const future = new Date(Date.now() + 100_000).toISOString();
+    leasesThenMock.mockImplementation((cb) =>
+      cb({
+        data: [
+          { id: "1", slot_key: "families", period: "mensual", amount_ars: 30000, leased_at: "2026-08-01T00:00:00Z", expires_at: future },
+        ],
+      })
+    );
     const userEvt = userEvent.setup();
     render(<AccountTabs user={user} />);
     await userEvt.click(screen.getByRole("tab", { name: "Mis arrendamientos" }));
-    expect(await screen.findByText("Todavía no arrendaste ninguna banda, negocio o propiedad.")).toBeInTheDocument();
+    // "families" and "Activo hasta" only appear if MyLeases actually mapped the mocked row into
+    // the DOM — a hardcoded static EmptyState in place of <MyLeases /> could never produce them.
+    expect(await screen.findByText("families")).toBeInTheDocument();
+    expect(screen.getByText(/Activo hasta/)).toBeInTheDocument();
   });
 });
