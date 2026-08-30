@@ -86,7 +86,7 @@ export function Galeria() {
               <figure key={photo.id} className="group relative break-inside-avoid overflow-hidden rounded-xl bg-white/[0.03]">
                 <Image
                   src={url}
-                  alt={`Foto de ${photo.author_display_name}${photo.caption ? `: ${photo.caption}` : ""}`}
+                  alt={`Foto de ${photo.author_display_name}, ${dateLabel}${photo.caption ? `: ${photo.caption}` : ""}`}
                   width={photo.width}
                   height={photo.height}
                   className="h-auto w-full"

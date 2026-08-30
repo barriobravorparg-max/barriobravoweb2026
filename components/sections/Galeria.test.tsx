@@ -43,7 +43,7 @@ describe("Galeria", () => {
     await waitFor(() => expect(screen.getByText("Chapita")).toBeInTheDocument());
     expect(screen.getByText("Qué noche en el casino")).toBeInTheDocument();
     expect(screen.getByText(/❤️ 2/)).toBeInTheDocument();
-    expect(screen.getByAltText(/Foto de Chapita/i)).toBeInTheDocument();
+    expect(screen.getByAltText(/Foto de Chapita, .*: Qué noche en el casino/i)).toBeInTheDocument();
   });
 
   it("filters photos by the search box", async () => {
