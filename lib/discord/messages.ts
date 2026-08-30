@@ -9,6 +9,7 @@ export interface DiscordAuthor {
 
 export interface DiscordAttachment {
   content_type?: string;
+  filename: string;
   url: string;
   size: number;
 }

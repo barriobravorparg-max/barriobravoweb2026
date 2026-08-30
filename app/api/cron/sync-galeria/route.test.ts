@@ -44,7 +44,7 @@ function message(overrides: Record<string, unknown> = {}) {
     content: "que noche",
     timestamp: new Date().toISOString(),
     author: { id: "u1", username: "chapa", global_name: "Chapita", avatar: null },
-    attachments: [{ content_type: "image/png", url: "http://cdn/a.png", size: 1000 }],
+    attachments: [{ content_type: "image/png", filename: "a.png", url: "http://cdn/a.png", size: 1000 }],
     reactions: [{ emoji: { name: "❤️" }, count: 2 }],
     ...overrides,
   };

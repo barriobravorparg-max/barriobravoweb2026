@@ -26,22 +26,37 @@ describe("extractImageAttachment", () => {
 
   it("returns null when the only attachment is not an image", () => {
     const message = baseMessage({
-      attachments: [{ content_type: "video/mp4", url: "http://x/clip.mp4", size: 100 }],
+      attachments: [{ content_type: "video/mp4", filename: "clip.mp4", url: "http://x/clip.mp4", size: 100 }],
     });
     expect(extractImageAttachment(message)).toBeNull();
   });
 
   it("skips an oversized image and returns null if it's the only one", () => {
     const message = baseMessage({
-      attachments: [{ content_type: "image/png", url: "http://x/big.png", size: 21 * 1024 * 1024 }],
+      attachments: [
+        { content_type: "image/png", filename: "big.png", url: "http://x/big.png", size: 21 * 1024 * 1024 },
+      ],
+    });
+    expect(extractImageAttachment(message)).toBeNull();
+  });
+
+  it("accepts an attachment with no content_type if the filename has an image extension", () => {
+    const attachment = { filename: "IMG_2026.PNG", url: "http://x/pasted.png", size: 1000 };
+    const message = baseMessage({ attachments: [attachment] });
+    expect(extractImageAttachment(message)).toEqual(attachment);
+  });
+
+  it("rejects an attachment with no content_type and no recognizable image extension", () => {
+    const message = baseMessage({
+      attachments: [{ filename: "clip.mp4", url: "http://x/clip.mp4", size: 100 }],
     });
     expect(extractImageAttachment(message)).toBeNull();
   });
 
   it("returns the first valid image attachment", () => {
-    const attachment = { content_type: "image/png", url: "http://x/a.png", size: 1000 };
+    const attachment = { content_type: "image/png", filename: "a.png", url: "http://x/a.png", size: 1000 };
     const message = baseMessage({
-      attachments: [{ content_type: "video/mp4", url: "http://x/clip.mp4", size: 100 }, attachment],
+      attachments: [{ content_type: "video/mp4", filename: "clip.mp4", url: "http://x/clip.mp4", size: 100 }, attachment],
     });
     expect(extractImageAttachment(message)).toEqual(attachment);
   });

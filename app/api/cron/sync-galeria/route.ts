@@ -93,7 +93,23 @@ async function syncMessage(
   // adjunto, deja de recibir actualizaciones de reacciones. La fila sigue
   // renderizando bien con sus últimas reacciones conocidas.
   const attachment = extractImageAttachment(message);
-  if (!attachment) return "skipped";
+  if (!attachment) {
+    // Diagnóstico temporal: si el mensaje tiene adjuntos pero ninguno
+    // calificó como imagen válida, dejamos rastro de por qué — content_type
+    // puede venir vacío para algunos adjuntos, y hoy dependemos 100% de ese
+    // campo.
+    if (message.attachments.length > 0) {
+      console.log("[cron/sync-galeria] mensaje con adjuntos pero ninguno calificó como imagen", {
+        messageId: message.id,
+        attachments: message.attachments.map((a) => ({
+          content_type: a.content_type ?? null,
+          filename: a.filename,
+          size: a.size,
+        })),
+      });
+    }
+    return "skipped";
+  }
 
   const { data: existing, error: selectError } = await admin
     .from("gallery_photos")

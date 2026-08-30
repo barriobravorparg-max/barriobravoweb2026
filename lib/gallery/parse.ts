@@ -9,9 +9,20 @@ const EXTENSION_BY_CONTENT_TYPE: Record<string, string> = {
   "image/gif": "gif",
 };
 
+const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".gif"];
+
+// Discord no garantiza `content_type` en todos los adjuntos (es un campo
+// opcional de su API). Cuando falta, nos apoyamos en la extensión del
+// nombre de archivo en vez de descartar una imagen real.
+function looksLikeImage(attachment: DiscordAttachment): boolean {
+  if (attachment.content_type?.startsWith("image/")) return true;
+  const name = attachment.filename.toLowerCase();
+  return IMAGE_EXTENSIONS.some((ext) => name.endsWith(ext));
+}
+
 export function extractImageAttachment(message: DiscordMessage): DiscordAttachment | null {
   for (const attachment of message.attachments) {
-    if (!attachment.content_type?.startsWith("image/")) continue;
+    if (!looksLikeImage(attachment)) continue;
     if (attachment.size > MAX_IMAGE_BYTES) continue;
     return attachment;
   }
