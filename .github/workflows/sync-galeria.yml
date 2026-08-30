@@ -6,12 +6,25 @@ on:
     - cron: "*/10 * * * *"
   workflow_dispatch: {}
 
+# Este workflow solo llama a una URL externa: no necesita nada del repo.
+permissions: {}
+
+# Dos corridas solapadas competirían contra el mismo endpoint de sync. Que hagan
+# cola en vez de pisarse (cancel-in-progress: false para no matar una sync a
+# mitad de camino).
+concurrency:
+  group: sync-galeria
+  cancel-in-progress: false
+
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Llamar al endpoint de sync
+        # Sin --silent: así el JSON de respuesta (inserted/updated/skipped/
+        # errors/truncated) queda en el log de la corrida.
         run: |
-          curl --fail --silent --show-error \
+          curl --fail --show-error \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             https://barriobravorp.vercel.app/api/cron/sync-galeria
