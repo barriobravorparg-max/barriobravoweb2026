@@ -1,6 +1,6 @@
 import type { DiscordAttachment, DiscordAuthor, DiscordMessage, DiscordReaction } from "@/lib/discord/messages";
 
-const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 
 const EXTENSION_BY_CONTENT_TYPE: Record<string, string> = {
   "image/png": "png",

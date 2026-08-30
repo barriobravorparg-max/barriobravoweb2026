@@ -33,7 +33,7 @@ describe("extractImageAttachment", () => {
 
   it("skips an oversized image and returns null if it's the only one", () => {
     const message = baseMessage({
-      attachments: [{ content_type: "image/png", url: "http://x/big.png", size: 9 * 1024 * 1024 }],
+      attachments: [{ content_type: "image/png", url: "http://x/big.png", size: 21 * 1024 * 1024 }],
     });
     expect(extractImageAttachment(message)).toBeNull();
   });
