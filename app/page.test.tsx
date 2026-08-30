@@ -30,9 +30,23 @@ vi.mock("@/lib/supabase/server", () => ({
   }),
 }));
 
+// La galería (client component) consulta Supabase al montar. La cadena termina
+// en una promesa real porque el componente encadena .then().catch() — mismo
+// shape que en components/sections/Galeria.test.tsx. Acá la dejamos pendiente a
+// propósito: este test es sobre la composición de la página, no sobre la
+// galería (que tiene su propio archivo de tests), y una promesa que nunca
+// resuelve evita updates de estado fuera de act().
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
-    from: () => ({ select: () => ({ order: () => ({ limit: () => ({ then: (cb: (r: { data: unknown[] }) => void) => cb({ data: [] }) }) }) }) }),
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          order: () => ({
+            limit: () => new Promise(() => {}),
+          }),
+        }),
+      }),
+    }),
     storage: { from: () => ({ getPublicUrl: () => ({ data: { publicUrl: "" } }) }) },
   }),
 }));

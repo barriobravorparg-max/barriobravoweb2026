@@ -19,16 +19,38 @@ interface GalleryPhotoRow {
 export function Galeria() {
   const supabase = useMemo(() => createClient(), []);
   const [photos, setPhotos] = useState<GalleryPhotoRow[] | null>(null);
+  const [hasError, setHasError] = useState(false);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    supabase
-      .from("gallery_photos")
-      .select("id, author_display_name, author_avatar_url, caption, storage_path, width, height, posted_at, reactions")
-      .order("posted_at", { ascending: false })
-      .limit(60)
-      .then(({ data }: { data: GalleryPhotoRow[] | null }) => {
+    // El query builder de PostgREST es un thenable, no una Promise: lo envolvemos
+    // para poder encadenarle un .catch() de verdad.
+    Promise.resolve(
+      supabase
+        .from("gallery_photos")
+        .select(
+          "id, author_display_name, author_avatar_url, caption, storage_path, width, height, posted_at, reactions"
+        )
+        // Defensa en profundidad: RLS ya filtra las ocultas, pero si alguna vez
+        // quedara mal configurada, este filtro explícito falla del lado seguro.
+        .eq("hidden", false)
+        .order("posted_at", { ascending: false })
+        .limit(60)
+    )
+      .then(({ data, error }: { data: GalleryPhotoRow[] | null; error: unknown }) => {
+        // Un error de PostgREST (RLS, migración sin aplicar, key mala) resuelve
+        // con data: null. Sin este chequeo se vería como "no hay fotos".
+        if (error) {
+          console.error("[Galeria] No se pudieron cargar las fotos", error);
+          setHasError(true);
+          return;
+        }
         setPhotos(data ?? []);
+      })
+      .catch((err: unknown) => {
+        // Fallo de red: la promesa rechaza y el skeleton giraría para siempre.
+        console.error("[Galeria] No se pudieron cargar las fotos", err);
+        setHasError(true);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -52,11 +74,18 @@ export function Galeria() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar por autor o descripción…"
+          aria-label="Buscar fotos por autor o descripción"
           className="mt-6 w-full max-w-sm rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-white placeholder:text-gray-500"
         />
       </div>
 
-      {photos === null && (
+      {hasError && (
+        <p aria-live="polite" className="mt-10 text-center text-gray-400">
+          No pudimos cargar la galería. Probá de nuevo en un momento.
+        </p>
+      )}
+
+      {!hasError && photos === null && (
         <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }, (_, i) => (
             <div key={i} className="aspect-[4/3] animate-pulse rounded-xl bg-purple/10" />
@@ -64,7 +93,7 @@ export function Galeria() {
         </div>
       )}
 
-      {photos !== null && filtered.length === 0 && (
+      {!hasError && photos !== null && filtered.length === 0 && (
         <p className="mt-10 text-center text-gray-400">
           {photos.length === 0
             ? "Todavía no hay fotos — sé el primero en compartir una."
