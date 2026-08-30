@@ -30,6 +30,13 @@ vi.mock("@/lib/supabase/server", () => ({
   }),
 }));
 
+vi.mock("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    from: () => ({ select: () => ({ order: () => ({ limit: () => ({ then: (cb: (r: { data: unknown[] }) => void) => cb({ data: [] }) }) }) }) }),
+    storage: { from: () => ({ getPublicUrl: () => ({ data: { publicUrl: "" } }) }) },
+  }),
+}));
+
 describe("Home", () => {
   it("keeps section content in the DOM under the loading overlay, then removes the overlay once it finishes", async () => {
     getSession.mockResolvedValueOnce({ data: { session: null } });
