@@ -96,7 +96,7 @@ async function syncMessage(
 
   const { error: uploadError } = await admin.storage
     .from("gallery")
-    .upload(storagePath, resizedBuffer, { contentType, upsert: false });
+    .upload(storagePath, resizedBuffer, { contentType, upsert: true });
   if (uploadError) throw new Error(uploadError.message);
 
   const { error: insertError } = await admin.from("gallery_photos").insert({
