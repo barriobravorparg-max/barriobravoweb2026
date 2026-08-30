@@ -15,6 +15,15 @@ const SYNC_WINDOW_DAYS = 7;
 const MAX_PAGES = 10;
 const PAGE_SIZE = 100;
 
+// Presupuesto de trabajo caro (descargar + redimensionar + subir + insertar) por
+// corrida. El cron corre cada 10 minutos, así que un backlog grande se drena en
+// varias corridas en vez de reventar el límite de duración de función de Vercel.
+const MAX_NEW_PHOTOS_PER_RUN = 20;
+
+// Vercel Hobby corta las funciones bastante antes que esto; pedir 60s explícito
+// nos da el techo máximo del plan en vez del default (10s).
+export const maxDuration = 60;
+
 type SyncResult = "inserted" | "updated" | "skipped";
 
 export async function GET(request: NextRequest) {
@@ -35,6 +44,8 @@ export async function GET(request: NextRequest) {
   let inserted = 0;
   let updated = 0;
   let skipped = 0;
+  let errors = 0;
+  let truncated = false;
   let before: string | undefined;
 
   pages: for (let page = 0; page < MAX_PAGES; page++) {
@@ -46,12 +57,20 @@ export async function GET(request: NextRequest) {
         break pages;
       }
 
+      if (inserted >= MAX_NEW_PHOTOS_PER_RUN) {
+        // Gastamos el presupuesto de fotos nuevas: cortamos acá y dejamos el
+        // resto para la próxima corrida.
+        truncated = true;
+        break pages;
+      }
+
       try {
         const result = await syncMessage(admin, message);
         if (result === "inserted") inserted += 1;
         else if (result === "updated") updated += 1;
         else skipped += 1;
       } catch (err) {
+        errors += 1;
         console.error("[cron/sync-galeria] Error procesando un mensaje", { messageId: message.id, error: err });
       }
     }
@@ -60,16 +79,25 @@ export async function GET(request: NextRequest) {
     before = messages[messages.length - 1].id;
   }
 
-  return NextResponse.json({ inserted, updated, skipped });
+  return NextResponse.json({ inserted, updated, skipped, errors, truncated });
 }
 
 async function syncMessage(
   admin: ReturnType<typeof createAdminClient>,
   message: DiscordMessage
 ): Promise<SyncResult> {
+  // El chequeo de adjunto va PRIMERO: los mensajes sin imagen (la mayoría en un
+  // canal real) no deben costar ni una consulta a la base.
+  //
+  // Contrapartida aceptada: si a un mensaje ya sincronizado le editan/borran el
+  // adjunto, deja de recibir actualizaciones de reacciones. La fila sigue
+  // renderizando bien con sus últimas reacciones conocidas.
+  const attachment = extractImageAttachment(message);
+  if (!attachment) return "skipped";
+
   const { data: existing, error: selectError } = await admin
     .from("gallery_photos")
-    .select("id")
+    .select("id, reactions")
     .eq("discord_message_id", message.id)
     .maybeSingle();
 
@@ -78,6 +106,10 @@ async function syncMessage(
   const reactions = formatReactions(message.reactions);
 
   if (existing) {
+    // Sin cambios en las reacciones no hay nada que escribir: esto evita un
+    // UPDATE por mensaje ya sincronizado en cada corrida.
+    if (reactionsEqual(existing.reactions, reactions)) return "skipped";
+
     const { error: updateError } = await admin
       .from("gallery_photos")
       .update({ reactions, synced_at: new Date().toISOString() })
@@ -85,9 +117,6 @@ async function syncMessage(
     if (updateError) throw new Error(updateError.message);
     return "updated";
   }
-
-  const attachment = extractImageAttachment(message);
-  if (!attachment) return "skipped";
 
   const rawBuffer = await downloadImageBuffer(attachment.url);
   const { buffer: resizedBuffer, width, height } = await resizeImage(rawBuffer);
@@ -110,7 +139,25 @@ async function syncMessage(
     posted_at: message.timestamp,
     reactions,
   });
-  if (insertError) throw new Error(insertError.message);
+  if (insertError) {
+    // 23505 = unique_violation sobre discord_message_id: otra corrida
+    // solapada ya insertó esta foto. No es un error, ya está sincronizada.
+    if (insertError.code === "23505") return "skipped";
+    throw new Error(insertError.message);
+  }
 
   return "inserted";
+}
+
+// Comparación de reacciones independiente del orden: Discord no garantiza un
+// orden estable en el array de reacciones, así que un JSON.stringify directo
+// daría falsos "cambió".
+function reactionsEqual(a: unknown, b: Record<string, number>): boolean {
+  return canonicalReactions(a) === canonicalReactions(b);
+}
+
+function canonicalReactions(value: unknown): string {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return "[]";
+  const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return JSON.stringify(entries);
 }

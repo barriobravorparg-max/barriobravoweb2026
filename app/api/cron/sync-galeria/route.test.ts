@@ -19,7 +19,8 @@ const gallerySelectEqMock = vi.fn(() => ({ maybeSingle: gallerySelectMaybeSingle
 const gallerySelectMock = vi.fn(() => ({ eq: gallerySelectEqMock }));
 const galleryUpdateEqMock = vi.fn(() => Promise.resolve({ error: null }));
 const galleryUpdateMock = vi.fn(() => ({ eq: galleryUpdateEqMock }));
-const galleryInsertMock = vi.fn(() => Promise.resolve({ error: null }));
+type InsertResult = { error: { code?: string; message: string } | null };
+const galleryInsertMock = vi.fn((): Promise<InsertResult> => Promise.resolve({ error: null }));
 const galleryFromMock = vi.fn(() => ({ select: gallerySelectMock, update: galleryUpdateMock, insert: galleryInsertMock }));
 
 const storageUploadMock = vi.fn(() => Promise.resolve({ error: null }));
@@ -49,6 +50,12 @@ function message(overrides: Record<string, unknown> = {}) {
   };
 }
 
+// Una página "llena" (PAGE_SIZE = 100), que es lo que hace que la ruta pida la
+// página siguiente.
+function fullPage(prefix: string, overrides: Record<string, unknown> = {}) {
+  return Array.from({ length: 100 }, (_, i) => message({ id: `${prefix}-${i}`, ...overrides }));
+}
+
 describe("GET /api/cron/sync-galeria", () => {
   beforeEach(() => {
     process.env.CRON_SECRET = "cron-secret";
@@ -57,8 +64,9 @@ describe("GET /api/cron/sync-galeria", () => {
     downloadImageBufferMock.mockReset().mockResolvedValue(Buffer.from([1]));
     resizeImageMock.mockReset().mockResolvedValue({ buffer: Buffer.from([1]), width: 800, height: 600 });
     gallerySelectMaybeSingleMock.mockReset().mockResolvedValue({ data: null, error: null });
+    gallerySelectMock.mockClear();
     galleryUpdateMock.mockClear();
-    galleryInsertMock.mockClear();
+    galleryInsertMock.mockReset().mockResolvedValue({ error: null });
     storageUploadMock.mockClear();
   });
 
@@ -94,11 +102,11 @@ describe("GET /api/cron/sync-galeria", () => {
         reactions: { "❤️": 2 },
       })
     );
-    expect(json).toEqual({ inserted: 1, updated: 0, skipped: 0 });
+    expect(json).toEqual({ inserted: 1, updated: 0, skipped: 0, errors: 0, truncated: false });
   });
 
   it("only updates reactions for a message that's already stored, without re-downloading the image", async () => {
-    gallerySelectMaybeSingleMock.mockResolvedValue({ data: { id: "row-1" }, error: null });
+    gallerySelectMaybeSingleMock.mockResolvedValue({ data: { id: "row-1", reactions: { "❤️": 1 } }, error: null });
     fetchChannelMessagesMock.mockResolvedValueOnce([message()]).mockResolvedValueOnce([]);
 
     const res = await GET(makeRequest("Bearer cron-secret"));
@@ -108,10 +116,44 @@ describe("GET /api/cron/sync-galeria", () => {
     expect(galleryUpdateMock).toHaveBeenCalledWith(
       expect.objectContaining({ reactions: { "❤️": 2 } })
     );
-    expect(json).toEqual({ inserted: 0, updated: 1, skipped: 0 });
+    expect(json).toEqual({ inserted: 0, updated: 1, skipped: 0, errors: 0, truncated: false });
   });
 
-  it("skips a message with no image attachment", async () => {
+  it("does not write anything when the stored reactions already match", async () => {
+    gallerySelectMaybeSingleMock.mockResolvedValue({ data: { id: "row-1", reactions: { "❤️": 2 } }, error: null });
+    fetchChannelMessagesMock.mockResolvedValueOnce([message()]).mockResolvedValueOnce([]);
+
+    const res = await GET(makeRequest("Bearer cron-secret"));
+    const json = await res.json();
+
+    expect(galleryUpdateMock).not.toHaveBeenCalled();
+    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1, errors: 0, truncated: false });
+  });
+
+  it("treats a different key order in the stored reactions as unchanged", async () => {
+    gallerySelectMaybeSingleMock.mockResolvedValue({
+      data: { id: "row-1", reactions: { "🔥": 5, "❤️": 2 } },
+      error: null,
+    });
+    fetchChannelMessagesMock
+      .mockResolvedValueOnce([
+        message({
+          reactions: [
+            { emoji: { name: "❤️" }, count: 2 },
+            { emoji: { name: "🔥" }, count: 5 },
+          ],
+        }),
+      ])
+      .mockResolvedValueOnce([]);
+
+    const res = await GET(makeRequest("Bearer cron-secret"));
+    const json = await res.json();
+
+    expect(galleryUpdateMock).not.toHaveBeenCalled();
+    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1, errors: 0, truncated: false });
+  });
+
+  it("skips a message with no image attachment without querying the database", async () => {
     fetchChannelMessagesMock
       .mockResolvedValueOnce([message({ attachments: [] })])
       .mockResolvedValueOnce([]);
@@ -119,8 +161,31 @@ describe("GET /api/cron/sync-galeria", () => {
     const res = await GET(makeRequest("Bearer cron-secret"));
     const json = await res.json();
 
+    expect(gallerySelectMock).not.toHaveBeenCalled();
     expect(galleryInsertMock).not.toHaveBeenCalled();
-    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1 });
+    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1, errors: 0, truncated: false });
+  });
+
+  it("treats a 23505 unique violation on insert as already synced, not an error", async () => {
+    galleryInsertMock.mockResolvedValueOnce({
+      error: { code: "23505", message: "duplicate key value violates unique constraint" },
+    });
+    fetchChannelMessagesMock.mockResolvedValueOnce([message()]).mockResolvedValueOnce([]);
+
+    const res = await GET(makeRequest("Bearer cron-secret"));
+    const json = await res.json();
+
+    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1, errors: 0, truncated: false });
+  });
+
+  it("counts a real insert failure as an error", async () => {
+    galleryInsertMock.mockResolvedValueOnce({ error: { code: "42501", message: "permission denied" } });
+    fetchChannelMessagesMock.mockResolvedValueOnce([message()]).mockResolvedValueOnce([]);
+
+    const res = await GET(makeRequest("Bearer cron-secret"));
+    const json = await res.json();
+
+    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 0, errors: 1, truncated: false });
   });
 
   it("stops paginating once it reaches a message older than the 7-day window", async () => {
@@ -131,10 +196,10 @@ describe("GET /api/cron/sync-galeria", () => {
     const json = await res.json();
 
     expect(fetchChannelMessagesMock).toHaveBeenCalledTimes(1);
-    expect(json).toEqual({ inserted: 1, updated: 0, skipped: 0 });
+    expect(json).toEqual({ inserted: 1, updated: 0, skipped: 0, errors: 0, truncated: false });
   });
 
-  it("does not let one message's error stop the rest of the batch", async () => {
+  it("does not let one message's error stop the rest of the batch, and counts it", async () => {
     downloadImageBufferMock.mockRejectedValueOnce(new Error("boom")).mockResolvedValue(Buffer.from([1]));
     fetchChannelMessagesMock
       .mockResolvedValueOnce([message({ id: "msg-bad" }), message({ id: "msg-good" })])
@@ -143,6 +208,49 @@ describe("GET /api/cron/sync-galeria", () => {
     const res = await GET(makeRequest("Bearer cron-secret"));
     const json = await res.json();
 
-    expect(json).toEqual({ inserted: 1, updated: 0, skipped: 0 });
+    expect(json).toEqual({ inserted: 1, updated: 0, skipped: 0, errors: 1, truncated: false });
+  });
+
+  it("caps new-photo work per run and reports truncated, leaving the rest for the next run", async () => {
+    // Una página llena de fotos nuevas: sin tope, la ruta procesaría las 100 y
+    // pediría una segunda página.
+    fetchChannelMessagesMock.mockResolvedValue(fullPage("msg"));
+
+    const res = await GET(makeRequest("Bearer cron-secret"));
+    const json = await res.json();
+
+    expect(json).toEqual({ inserted: 20, updated: 0, skipped: 0, errors: 0, truncated: true });
+    expect(galleryInsertMock).toHaveBeenCalledTimes(20);
+    expect(downloadImageBufferMock).toHaveBeenCalledTimes(20);
+    // Cortó dentro de la primera página: nunca pidió la siguiente.
+    expect(fetchChannelMessagesMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("stops after MAX_PAGES full pages even when nothing is expensive to process", async () => {
+    // Mensajes sin adjunto: se saltean, así que el tope de fotos nuevas nunca
+    // se alcanza y lo único que corta la paginación es MAX_PAGES.
+    fetchChannelMessagesMock.mockImplementation(() =>
+      Promise.resolve(fullPage(`p${fetchChannelMessagesMock.mock.calls.length}`, { attachments: [] }))
+    );
+
+    const res = await GET(makeRequest("Bearer cron-secret"));
+    const json = await res.json();
+
+    expect(fetchChannelMessagesMock).toHaveBeenCalledTimes(10);
+    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1000, errors: 0, truncated: false });
+  });
+
+  it("does not log a duplicate insert as an error", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      galleryInsertMock.mockResolvedValueOnce({ error: { code: "23505", message: "duplicate" } });
+      fetchChannelMessagesMock.mockResolvedValueOnce([message()]).mockResolvedValueOnce([]);
+
+      await GET(makeRequest("Bearer cron-secret"));
+
+      expect(errorSpy).not.toHaveBeenCalled();
+    } finally {
+      errorSpy.mockRestore();
+    }
   });
 });
