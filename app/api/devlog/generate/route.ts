@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { timingSafeEqual } from "crypto";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { checkDevlogPassword } from "@/lib/devlog/auth";
 
 const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_MODEL = "claude-sonnet-5";
@@ -10,13 +9,6 @@ Escribí en español rioplatense (voseo), tono directo, sin relleno ni marketing
 No inventes cambios que no estén explícitamente en las notas — si algo es ambiguo, dejalo afuera.
 Respondé ÚNICAMENTE con un JSON válido, sin texto extra, sin markdown, sin backticks, con esta forma exacta:
 {"title": string, "bullets": string[]}`;
-
-function safeEqual(a: string, b: string): boolean {
-  const bufA = Buffer.from(a);
-  const bufB = Buffer.from(b);
-  if (bufA.length !== bufB.length) return false;
-  return timingSafeEqual(bufA, bufB);
-}
 
 interface DevlogContent {
   title: string;
@@ -55,8 +47,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Falta rawNotes" }, { status: 400 });
   }
 
-  const adminPassword = process.env.ADMIN_DEVLOG_PASSWORD;
-  if (!adminPassword || !password || !safeEqual(password, adminPassword)) {
+  if (!checkDevlogPassword(password)) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
@@ -81,14 +72,17 @@ export async function POST(request: NextRequest) {
   });
 
   if (!anthropicRes.ok) {
-    return NextResponse.json(
-      { error: `La API de Anthropic respondió ${anthropicRes.status}` },
-      { status: 502 }
-    );
+    return NextResponse.json({ error: `La API de Anthropic respondió ${anthropicRes.status}` }, { status: 502 });
   }
 
   const anthropicJson = await anthropicRes.json();
-  const rawText = anthropicJson?.content?.[0]?.text;
+  // No asumir que la respuesta está en content[0]: cuando el modelo piensa
+  // antes de responder, ese bloque "thinking" ocupa la posición 0 y el
+  // texto real queda más adelante. Buscamos el primer bloque type: "text".
+  const textBlock = Array.isArray(anthropicJson?.content)
+    ? anthropicJson.content.find((block: { type?: string }) => block?.type === "text")
+    : undefined;
+  const rawText = textBlock?.text;
   const content = typeof rawText === "string" ? parseDevlogContent(rawText) : null;
 
   if (!content) {
@@ -101,47 +95,5 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { title, bullets } = content;
-  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-  if (!webhookUrl) {
-    return NextResponse.json({ error: "Falta DISCORD_WEBHOOK_URL", title, bullets }, { status: 500 });
-  }
-
-  const discordRes = await fetch(webhookUrl, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      embeds: [
-        {
-          author: { name: "BarrioBravo RP -" },
-          title: `${title} ⚡`,
-          description: bullets.map((b) => `- ${b}`).join("\n"),
-          color: 0xff6b8a,
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    }),
-  });
-
-  if (!discordRes.ok) {
-    return NextResponse.json(
-      { error: `Discord respondió ${discordRes.status} al publicar el embed`, title, bullets },
-      { status: 502 }
-    );
-  }
-
-  const admin = createAdminClient();
-  const { error: insertError } = await admin.from("devlog_posts").insert({
-    title,
-    bullets,
-    raw_notes: rawNotes,
-  });
-
-  if (insertError) {
-    // El post ya salió en Discord — no lo tratamos como fallo total, pero
-    // avisamos que no quedó guardado.
-    return NextResponse.json({ title, bullets, dbError: insertError.message });
-  }
-
-  return NextResponse.json({ title, bullets });
+  return NextResponse.json(content);
 }
