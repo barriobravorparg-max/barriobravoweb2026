@@ -14,10 +14,12 @@ export default function DevlogAdminPage() {
   const [rawNotes, setRawNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [result, setResult] = useState<DevlogResult | null>(null);
 
   async function handleSubmit() {
     setError(null);
+    setErrorDetail(null);
     setResult(null);
     setLoading(true);
     try {
@@ -29,6 +31,9 @@ export default function DevlogAdminPage() {
       const json = await res.json();
       if (!res.ok) {
         setError(json.error ?? "Algo falló al publicar el devlog.");
+        if (json.rawResponse) {
+          setErrorDetail(typeof json.rawResponse === "string" ? json.rawResponse : JSON.stringify(json.rawResponse, null, 2));
+        }
         return;
       }
       setResult(json);
@@ -73,9 +78,14 @@ export default function DevlogAdminPage() {
         </div>
 
         {error && (
-          <p role="alert" className="text-sm text-coral">
-            {error}
-          </p>
+          <div role="alert">
+            <p className="text-sm text-coral">{error}</p>
+            {errorDetail && (
+              <pre className="mt-2 max-h-48 overflow-auto rounded-lg border border-white/10 bg-white/[0.03] p-3 text-xs text-gray-400">
+                {errorDetail}
+              </pre>
+            )}
+          </div>
         )}
 
         <Button variant="primary" disabled={loading || !rawNotes.trim()} onClick={handleSubmit}>

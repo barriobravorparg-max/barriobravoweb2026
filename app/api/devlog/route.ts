@@ -24,9 +24,15 @@ interface DevlogContent {
 }
 
 function parseDevlogContent(raw: string): DevlogContent | null {
-  const cleaned = raw.trim().replace(/^```(?:json)?/, "").replace(/```$/, "").trim();
+  // A pesar de la instrucción de responder solo JSON, el modelo a veces le
+  // agrega texto alrededor (una intro, un cierre, backticks). En vez de
+  // exigir que TODO el texto sea JSON puro, buscamos el primer objeto
+  // { ... } dentro de la respuesta y parseamos solo eso.
+  const match = raw.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+
   try {
-    const parsed = JSON.parse(cleaned);
+    const parsed = JSON.parse(match[0]);
     if (
       typeof parsed?.title === "string" &&
       Array.isArray(parsed?.bullets) &&
@@ -86,7 +92,13 @@ export async function POST(request: NextRequest) {
   const content = typeof rawText === "string" ? parseDevlogContent(rawText) : null;
 
   if (!content) {
-    return NextResponse.json({ error: "No se pudo interpretar la respuesta de Anthropic" }, { status: 502 });
+    return NextResponse.json(
+      {
+        error: "No se pudo interpretar la respuesta de Anthropic",
+        rawResponse: typeof rawText === "string" ? rawText.slice(0, 2000) : anthropicJson,
+      },
+      { status: 502 }
+    );
   }
 
   const { title, bullets } = content;
