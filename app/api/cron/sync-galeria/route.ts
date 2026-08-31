@@ -47,6 +47,11 @@ export async function GET(request: NextRequest) {
   let errors = 0;
   let truncated = false;
   let before: string | undefined;
+  // Diagnóstico temporal: por qué un mensaje con adjuntos no calificó como
+  // imagen. Se devuelve en la respuesta (no solo en logs) porque es más
+  // fácil de leer desde el curl del workflow que desde Vercel Logs. Sacar
+  // este campo una vez resuelto el problema real en producción.
+  const debug: unknown[] = [];
 
   pages: for (let page = 0; page < MAX_PAGES; page++) {
     const messages = await fetchChannelMessages(channelId, { before, limit: PAGE_SIZE });
@@ -64,6 +69,17 @@ export async function GET(request: NextRequest) {
         break pages;
       }
 
+      if (message.attachments.length > 0 && !extractImageAttachment(message) && debug.length < 5) {
+        debug.push({
+          messageId: message.id,
+          attachments: message.attachments.map((a) => ({
+            content_type: a.content_type ?? null,
+            filename: a.filename,
+            size: a.size,
+          })),
+        });
+      }
+
       try {
         const result = await syncMessage(admin, message);
         if (result === "inserted") inserted += 1;
@@ -79,7 +95,7 @@ export async function GET(request: NextRequest) {
     before = messages[messages.length - 1].id;
   }
 
-  return NextResponse.json({ inserted, updated, skipped, errors, truncated });
+  return NextResponse.json({ inserted, updated, skipped, errors, truncated, debug });
 }
 
 async function syncMessage(

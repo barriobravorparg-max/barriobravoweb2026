@@ -102,7 +102,7 @@ describe("GET /api/cron/sync-galeria", () => {
         reactions: { "❤️": 2 },
       })
     );
-    expect(json).toEqual({ inserted: 1, updated: 0, skipped: 0, errors: 0, truncated: false });
+    expect(json).toEqual({ inserted: 1, updated: 0, skipped: 0, errors: 0, truncated: false, debug: [] });
   });
 
   it("only updates reactions for a message that's already stored, without re-downloading the image", async () => {
@@ -116,7 +116,7 @@ describe("GET /api/cron/sync-galeria", () => {
     expect(galleryUpdateMock).toHaveBeenCalledWith(
       expect.objectContaining({ reactions: { "❤️": 2 } })
     );
-    expect(json).toEqual({ inserted: 0, updated: 1, skipped: 0, errors: 0, truncated: false });
+    expect(json).toEqual({ inserted: 0, updated: 1, skipped: 0, errors: 0, truncated: false, debug: [] });
   });
 
   it("does not write anything when the stored reactions already match", async () => {
@@ -127,7 +127,7 @@ describe("GET /api/cron/sync-galeria", () => {
     const json = await res.json();
 
     expect(galleryUpdateMock).not.toHaveBeenCalled();
-    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1, errors: 0, truncated: false });
+    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1, errors: 0, truncated: false, debug: [] });
   });
 
   it("treats a different key order in the stored reactions as unchanged", async () => {
@@ -150,7 +150,7 @@ describe("GET /api/cron/sync-galeria", () => {
     const json = await res.json();
 
     expect(galleryUpdateMock).not.toHaveBeenCalled();
-    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1, errors: 0, truncated: false });
+    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1, errors: 0, truncated: false, debug: [] });
   });
 
   it("skips a message with no image attachment without querying the database", async () => {
@@ -163,7 +163,25 @@ describe("GET /api/cron/sync-galeria", () => {
 
     expect(gallerySelectMock).not.toHaveBeenCalled();
     expect(galleryInsertMock).not.toHaveBeenCalled();
-    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1, errors: 0, truncated: false });
+    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1, errors: 0, truncated: false, debug: [] });
+  });
+
+  it("reports diagnostic info when a message has attachments but none qualify as an image", async () => {
+    fetchChannelMessagesMock
+      .mockResolvedValueOnce([
+        message({ attachments: [{ content_type: undefined, filename: "clip.mov", url: "http://cdn/clip.mov", size: 500 }] }),
+      ])
+      .mockResolvedValueOnce([]);
+
+    const res = await GET(makeRequest("Bearer cron-secret"));
+    const json = await res.json();
+
+    expect(json.debug).toEqual([
+      {
+        messageId: "msg-1",
+        attachments: [{ content_type: null, filename: "clip.mov", size: 500 }],
+      },
+    ]);
   });
 
   it("treats a 23505 unique violation on insert as already synced, not an error", async () => {
@@ -175,7 +193,7 @@ describe("GET /api/cron/sync-galeria", () => {
     const res = await GET(makeRequest("Bearer cron-secret"));
     const json = await res.json();
 
-    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1, errors: 0, truncated: false });
+    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1, errors: 0, truncated: false, debug: [] });
   });
 
   it("counts a real insert failure as an error", async () => {
@@ -185,7 +203,7 @@ describe("GET /api/cron/sync-galeria", () => {
     const res = await GET(makeRequest("Bearer cron-secret"));
     const json = await res.json();
 
-    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 0, errors: 1, truncated: false });
+    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 0, errors: 1, truncated: false, debug: [] });
   });
 
   it("stops paginating once it reaches a message older than the 7-day window", async () => {
@@ -196,7 +214,7 @@ describe("GET /api/cron/sync-galeria", () => {
     const json = await res.json();
 
     expect(fetchChannelMessagesMock).toHaveBeenCalledTimes(1);
-    expect(json).toEqual({ inserted: 1, updated: 0, skipped: 0, errors: 0, truncated: false });
+    expect(json).toEqual({ inserted: 1, updated: 0, skipped: 0, errors: 0, truncated: false, debug: [] });
   });
 
   it("does not let one message's error stop the rest of the batch, and counts it", async () => {
@@ -208,7 +226,7 @@ describe("GET /api/cron/sync-galeria", () => {
     const res = await GET(makeRequest("Bearer cron-secret"));
     const json = await res.json();
 
-    expect(json).toEqual({ inserted: 1, updated: 0, skipped: 0, errors: 1, truncated: false });
+    expect(json).toEqual({ inserted: 1, updated: 0, skipped: 0, errors: 1, truncated: false, debug: [] });
   });
 
   it("caps new-photo work per run and reports truncated, leaving the rest for the next run", async () => {
@@ -219,7 +237,7 @@ describe("GET /api/cron/sync-galeria", () => {
     const res = await GET(makeRequest("Bearer cron-secret"));
     const json = await res.json();
 
-    expect(json).toEqual({ inserted: 20, updated: 0, skipped: 0, errors: 0, truncated: true });
+    expect(json).toEqual({ inserted: 20, updated: 0, skipped: 0, errors: 0, truncated: true, debug: [] });
     expect(galleryInsertMock).toHaveBeenCalledTimes(20);
     expect(downloadImageBufferMock).toHaveBeenCalledTimes(20);
     // Cortó dentro de la primera página: nunca pidió la siguiente.
@@ -237,7 +255,7 @@ describe("GET /api/cron/sync-galeria", () => {
     const json = await res.json();
 
     expect(fetchChannelMessagesMock).toHaveBeenCalledTimes(10);
-    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1000, errors: 0, truncated: false });
+    expect(json).toEqual({ inserted: 0, updated: 0, skipped: 1000, errors: 0, truncated: false, debug: [] });
   });
 
   it("does not log a duplicate insert as an error", async () => {
